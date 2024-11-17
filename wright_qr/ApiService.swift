@@ -26,7 +26,7 @@ class ApiService {
         }.resume()
     }
     
-    // GET ITEMS
+    // GET ITEMS BY ID
     func getItemsByBag(for bagId: String, completion: @escaping ([Item]) -> Void) {
         let urlString = "\(baseUrl)/items_by_bag_id/\(bagId)"
         guard let url = URL(string: urlString) else {
@@ -66,7 +66,7 @@ class ApiService {
 
     // POST ITEM
     func postItem(_ item: Item, completion: @escaping (Bool) -> Void) {
-        guard let url = URL(string: "\(baseUrl)/bags/\(item.id)/items"),
+        guard let url = URL(string: "\(baseUrl)/items"),
               let jsonData = try? JSONEncoder().encode(item) else { return }
         
         var request = URLRequest(url: url)

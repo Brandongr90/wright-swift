@@ -10,22 +10,9 @@
 		B3E5A4B52CE6A27F00AAE3DC /* wright_qr.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = wright_qr.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		B3B3ECA52CE7D9DA00A1D6E2 /* Exceptions for "wright_qr" folder in "wright_qr" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				"wright-qr-Info.plist",
-			);
-			target = B3E5A4B42CE6A27F00AAE3DC /* wright_qr */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		B3E5A4B72CE6A27F00AAE3DC /* wright_qr */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				B3B3ECA52CE7D9DA00A1D6E2 /* Exceptions for "wright_qr" folder in "wright_qr" target */,
-			);
 			path = wright_qr;
 			sourceTree = "<group>";
 		};
