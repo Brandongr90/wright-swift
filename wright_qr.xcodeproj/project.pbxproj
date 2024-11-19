@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		B3E5A4B52CE6A27F00AAE3DC /* wright_qr.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = wright_qr.app; path = "/Users/brgr/Documents/Swift/wright_qr/build/Debug-iphoneos/wright_qr.app"; sourceTree = "<absolute>"; };
+		B37753C92CED1C47002E39A8 /* wright_qr.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = wright_qr.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -33,6 +33,7 @@
 			isa = PBXGroup;
 			children = (
 				B3E5A4B72CE6A27F00AAE3DC /* wright_qr */,
+				B37753C92CED1C47002E39A8 /* wright_qr.app */,
 			);
 			sourceTree = "<group>";
 		};
@@ -58,7 +59,7 @@
 			packageProductDependencies = (
 			);
 			productName = wright_qr;
-			productReference = B3E5A4B52CE6A27F00AAE3DC /* wright_qr.app */;
+			productReference = B37753C92CED1C47002E39A8 /* wright_qr.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -247,6 +248,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "wright-qr-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Tool Tracker";
 				INFOPLIST_KEY_NSCameraUsageDescription = "wright_qr wants to use your camera";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "$(PRODUCT_NAME) needs permission to access your library";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -279,6 +281,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "wright-qr-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Tool Tracker";
 				INFOPLIST_KEY_NSCameraUsageDescription = "wright_qr wants to use your camera";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "$(PRODUCT_NAME) needs permission to access your library";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
