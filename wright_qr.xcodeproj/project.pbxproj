@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		B3E5A4B52CE6A27F00AAE3DC /* wright_qr.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = wright_qr.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B3E5A4B52CE6A27F00AAE3DC /* wright_qr.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = wright_qr.app; path = "/Users/brgr/Documents/Swift/wright_qr/build/Debug-iphoneos/wright_qr.app"; sourceTree = "<absolute>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -33,16 +33,7 @@
 			isa = PBXGroup;
 			children = (
 				B3E5A4B72CE6A27F00AAE3DC /* wright_qr */,
-				B3E5A4B62CE6A27F00AAE3DC /* Products */,
 			);
-			sourceTree = "<group>";
-		};
-		B3E5A4B62CE6A27F00AAE3DC /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				B3E5A4B52CE6A27F00AAE3DC /* wright_qr.app */,
-			);
-			name = Products;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -95,7 +86,7 @@
 			mainGroup = B3E5A4AC2CE6A27F00AAE3DC;
 			minimizedProjectReferenceProxies = 1;
 			preferredProjectObjectVersion = 77;
-			productRefGroup = B3E5A4B62CE6A27F00AAE3DC /* Products */;
+			productRefGroup = B3E5A4AC2CE6A27F00AAE3DC;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (

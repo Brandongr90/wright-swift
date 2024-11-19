@@ -8,23 +8,44 @@
 import Foundation
 
 class ApiService {
-    let baseUrl = "http://localhost:3000"
+    let baseUrl = "https://qr-generator-services.onrender.com"
     
     // GET BAGS
     func getBags(completion: @escaping ([Bag]) -> Void) {
-        guard let url = URL(string: "\(baseUrl)/bags") else { return }
-        
+        guard let url = URL(string: "\(baseUrl)/bags") else {
+            print("Invalid URL")
+            completion([])
+            return
+        }
         URLSession.shared.dataTask(with: url) { data, response, error in
-            guard let data = data, error == nil else {
-                completion([])
+            if let error = error {
+                print("Error fetching bags: \(error.localizedDescription)")
+                DispatchQueue.main.async {
+                    completion([])
+                }
                 return
             }
-            let bags = try? JSONDecoder().decode([Bag].self, from: data)
-            DispatchQueue.main.async {
-                completion(bags ?? [])
+            guard let data = data else {
+                print("No data received.")
+                DispatchQueue.main.async {
+                    completion([])
+                }
+                return
+            }
+            do {
+                let bags = try JSONDecoder().decode([Bag].self, from: data)
+                DispatchQueue.main.async {
+                    completion(bags)
+                }
+            } catch {
+                print("Error decoding bags: \(error.localizedDescription)")
+                DispatchQueue.main.async {
+                    completion([])
+                }
             }
         }.resume()
     }
+    
     
     // GET ITEMS BY ID
     func getItemsByBag(for bagId: String, completion: @escaping ([Item]) -> Void) {
@@ -39,7 +60,7 @@ class ApiService {
                 return
             }
             // print("JSON:", String(data: data, encoding: .utf8) ?? "Error decoding data")
-
+            
             let items = try? JSONDecoder().decode([Item].self, from: data)
             DispatchQueue.main.async {
                 completion(items ?? [])
@@ -63,7 +84,7 @@ class ApiService {
             }
         }.resume()
     }
-
+    
     // POST ITEM
     func postItem(_ item: Item, completion: @escaping (Bool) -> Void) {
         guard let url = URL(string: "\(baseUrl)/items"),
