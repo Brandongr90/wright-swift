@@ -38,6 +38,7 @@ struct LoadingView: View {
                         RoundedRectangle(cornerRadius: 12)
                             .fill(mainColor.opacity(0.3))
                     )
+                    .multilineTextAlignment(.center)
             }
             .padding()
         }

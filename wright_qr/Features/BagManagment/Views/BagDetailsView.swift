@@ -15,6 +15,7 @@ struct BagDetailsView: View {
     @State private var isLoading = false
     @State private var qrImage: UIImage? = nil
     @State private var showQRPreview = false
+    @Environment(\.colorScheme) var colorScheme
     let apiService = ApiService()
     
     private let mainColor = Color(red: 0.04, green: 0.36, blue: 0.25)
@@ -29,17 +30,55 @@ struct BagDetailsView: View {
                         description: Text("Add your first item to this bag")
                     )
                 } else {
-                    List(items) { item in
-                        NavigationLink(destination: ItemDetailsView(item: item)) {
-                            VStack(alignment: .leading) {
-                                Text(item.itemDescription)
-                                    .font(.headline)
-                                Text(item.comment)
-                                    .font(.subheadline)
-                                    .foregroundColor(.gray)
+                    List {
+                        ForEach(items) { item in
+                            NavigationLink(destination: ItemDetailsView(item: item)) {
+                                HStack(spacing: 16) {
+                                    ZStack {
+                                        Circle()
+                                            .fill(mainColor.opacity(0.1))
+                                            .frame(width: 50, height: 50)
+                                        Image(systemName: "cube.box.fill")
+                                            .foregroundColor(mainColor)
+                                            .font(.title2)
+                                    }
+                                    
+                                    VStack(alignment: .leading, spacing: 8) {
+                                        Text(item.itemDescription)
+                                            .font(.headline)
+                                            .foregroundColor(.primary)
+                                            .lineLimit(1)
+                                        
+                                        HStack {
+                                            Label(item.brand.isEmpty ? "N/A" : item.brand, systemImage: "tag.fill")
+                                                .font(.subheadline)
+                                                .foregroundColor(.secondary)
+                                                .lineLimit(1)
+                                            
+                                            Spacer()
+                                            
+                                            Label(item.conditionO.isEmpty ? "N/A" : item.conditionO, systemImage: "checkmark.circle.fill")
+                                                .font(.subheadline)
+                                                .foregroundColor(
+                                                    item.conditionO.lowercased() == "new" ? .green :
+                                                    item.conditionO.lowercased() == "used" ? .orange : .gray
+                                                )
+                                                .lineLimit(1)
+                                        }
+                                    }
+                                    .padding(.leading, 8)
+                                    
+                                    Spacer()
+                                    
+                                    Image(systemName: "chevron.right")
+                                        .foregroundColor(.gray)
+                                }
+                                .padding(.vertical, 12)
                             }
+                            .listRowBackground(Color.clear)
                         }
                     }
+                    .listStyle(PlainListStyle())
                 }
                 
                 VStack(spacing: 12) {
@@ -73,7 +112,7 @@ struct BagDetailsView: View {
                 }
                 .padding()
             }
-            // Loading
+            
             if isLoading {
                 LoadingView(message: "Loading items...", mainColor: mainColor)
             }
@@ -103,17 +142,6 @@ struct BagDetailsView: View {
         }
     }
     
-    //    func addItem(itemName: String) {
-    //        print("Add Item")
-    //        let newItem = Item(id: bag.id, itemDescription: <#T##String#>, modelName: <#T##String#>, brand: <#T##String#>, comment: <#T##String#>, serialNumber: <#T##String#>, conditionO: <#T##String#>, inspection: <#T##Int#>, inspectionDate: <#T##String#>, inspectorName: <#T##String#>, inspectionDate1: <#T##String#>, expirationDate: <#T##String#>, bagID: <#T##String#>)
-    //
-    //        apiService.postItem(newItem) { success in
-    //            if success {
-    //                loadItems()
-    //            }
-    //        }
-    //    }
-    
     func generateQR() {
         let context = CIContext()
         let filter = CIFilter.qrCodeGenerator()
@@ -133,5 +161,3 @@ struct BagDetailsView: View {
         }
     }
 }
-
-

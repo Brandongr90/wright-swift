@@ -163,6 +163,6 @@ struct RecentActivityCard: View {
     }
 }
 
-#Preview {
-    HomeView()
-}
+//#Preview {
+//    HomeView()
+//}
