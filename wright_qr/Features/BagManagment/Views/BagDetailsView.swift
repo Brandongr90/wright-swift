@@ -70,8 +70,8 @@ struct BagDetailsView: View {
                                     
                                     Spacer()
                                     
-                                    Image(systemName: "chevron.right")
-                                        .foregroundColor(.gray)
+//                                    Image(systemName: "chevron.right")
+//                                        .foregroundColor(.gray)
                                 }
                                 .padding(.vertical, 12)
                             }

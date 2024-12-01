@@ -9,6 +9,7 @@ import Foundation
 
 class ApiService {
     let baseUrl = "https://qr-generator-services.onrender.com"
+   // let baseUrl = "http://localhost:3000"
     
     // GET BAGS
     func getBags(completion: @escaping ([Bag]) -> Void) {
