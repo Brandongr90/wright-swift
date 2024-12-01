@@ -8,83 +8,106 @@
 import SwiftUI
 
 struct HomeView: View {
-    // Color scheme
+    @StateObject private var userManager = UserManager.shared
     private let mainColor = Color(red: 0.04, green: 0.36, blue: 0.25)
     @State private var selectedTab = 0
     
     var body: some View {
         NavigationStack {
             ZStack {
-                // Background
                 Color(uiColor: .systemBackground)
                     .ignoresSafeArea()
                 
-                VStack(spacing: 30) {
-                    // Logo/Header Area
-                    VStack(spacing: 12) {
-                        Image(systemName: "qrcode.viewfinder")
-                            .font(.system(size: 80))
-                            .foregroundColor(mainColor)
-                        
-                        Text("QR Manager")
-                            .font(.system(size: 32, weight: .bold, design: .rounded))
-                            .foregroundColor(.primary)
-                        
-                        Text("Organize and track your items easily")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                    }
-                    .padding(.top, 40)
-                    
-                    // Main Actions
-                    VStack(spacing: 16) {
-                        NavigationLink(destination: GenerateQRView()) {
-                            ActionButton(
-                                icon: "plus.square.fill",
-                                title: "Bags | Generate QR",
-                                subtitle: "Create a new QR code for your items",
-                                color: mainColor
-                            ).multilineTextAlignment(.leading)
+                ScrollView {
+                    VStack(spacing: 24) {
+                        // Header con información del usuario
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Welcome back,")
+                                .font(.title2)
+                                .foregroundColor(.secondary)
+                            Text("\(userManager.currentUser?.name ?? "") \(userManager.currentUser?.last_name ?? "")")
+                                .font(.title)
+                                .fontWeight(.bold)
+                                .foregroundColor(.primary)
                         }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal)
+                        .padding(.top, 20)
                         
-                        NavigationLink(destination: ScanQRView()) {
-                            ActionButton(
-                                icon: "qrcode.viewfinder",
-                                title: "Scan QR",
-                                subtitle: "Scan an existing QR code",
-                                color: mainColor
-                            )
+                        // Logo Area
+                        VStack(spacing: 12) {
+                            Image(systemName: "qrcode.viewfinder")
+                                .font(.system(size: 60))
+                                .foregroundColor(mainColor)
+                            
+                            Text("QR Manager")
+                                .font(.system(size: 28, weight: .bold, design: .rounded))
+                                .foregroundColor(.primary)
+                            
+                            Text("Organize and track your items easily")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
                         }
-                    }
-                    .padding(.horizontal)
-                    
-                    // Recent Activity Section
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Recent Activity")
-                            .font(.headline)
-                            .foregroundColor(.primary)
-                            .padding(.horizontal)
+                        .padding(.vertical, 10)
                         
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 16) {
-                                ForEach(0..<3) { _ in
-                                    RecentActivityCard()
-                                }
+                        // Main Actions
+                        VStack(spacing: 16) {
+                            NavigationLink(destination: GenerateQRView()) {
+                                ActionButton(
+                                    icon: "plus.square.fill",
+                                    title: "Bags | Generate QR",
+                                    subtitle: "Create a new QR code for your items",
+                                    color: mainColor
+                                ).multilineTextAlignment(.leading)
                             }
-                            .padding(.horizontal)
+                            
+                            NavigationLink(destination: ScanQRView()) {
+                                ActionButton(
+                                    icon: "qrcode.viewfinder",
+                                    title: "Scan QR",
+                                    subtitle: "Scan an existing QR code",
+                                    color: mainColor
+                                )
+                            }
+                        }
+                        .padding(.horizontal)
+                        
+                        // Recent Activity Section
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Recent Activity")
+                                .font(.headline)
+                                .foregroundColor(.primary)
+                                .padding(.horizontal)
+                            
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: 16) {
+                                    ForEach(0..<3) { _ in
+                                        RecentActivityCard()
+                                    }
+                                }
+                                .padding(.horizontal)
+                            }
                         }
                     }
-                    
-                    Spacer()
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: {
-                        // Add settings action here
-                    }) {
-                        Image(systemName: "gear")
+                    Menu {
+                        Button(action: {
+                            // Add settings action here
+                        }) {
+                            Label("Settings", systemImage: "gear")
+                        }
+                        
+                        Button(action: {
+                            userManager.logout()
+                        }) {
+                            Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
                             .foregroundColor(mainColor)
                     }
                 }
@@ -93,7 +116,7 @@ struct HomeView: View {
     }
 }
 
-// Custom Action Button View
+// Mantener los componentes ActionButton y RecentActivityCard existentes
 struct ActionButton: View {
     let icon: String
     let title: String
@@ -132,7 +155,6 @@ struct ActionButton: View {
     }
 }
 
-// Recent Activity Card View
 struct RecentActivityCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -162,7 +184,3 @@ struct RecentActivityCard: View {
         .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
     }
 }
-
-//#Preview {
-//    HomeView()
-//}

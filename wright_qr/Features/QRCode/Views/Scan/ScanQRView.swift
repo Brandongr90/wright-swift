@@ -12,6 +12,7 @@ struct ScanQRView: View {
     @State private var scannedCode: String?
     @State private var showBagDetails = false
     @State private var scannedBag: Bag?
+    @StateObject private var userManager = UserManager.shared
     let apiService = ApiService()
     
     var body: some View {
@@ -21,8 +22,8 @@ struct ScanQRView: View {
                     .frame(width: 300, height: 300)
                     .cornerRadius(12)
                     .padding()
-                    .onChange(of: scannedCode) { code in
-                        if let code = code {
+                    .onChange(of: scannedCode) { oldValue, newValue in
+                        if let code = newValue {
                             loadBag(withId: code)
                         }
                     }
@@ -43,9 +44,11 @@ struct ScanQRView: View {
     }
     
     private func loadBag(withId id: String) {
-        // Aquí deberías hacer una llamada a tu API para obtener los detalles del bag
-        // Por ahora, creamos un bag temporal
-        scannedBag = Bag(id: id, name: "Scanned Bag")
-        showBagDetails = true
+        if let userId = userManager.currentUser?.id {
+            // Aquí deberías hacer una llamada a tu API para obtener los detalles del bag
+            // Por ahora, creamos un bag temporal
+            scannedBag = Bag(id: id, name: "Scanned Bag", userId: userId)
+            showBagDetails = true
+        }
     }
 }

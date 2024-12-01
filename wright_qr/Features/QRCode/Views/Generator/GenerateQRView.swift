@@ -89,21 +89,33 @@ struct GenerateQRView: View {
     // Get All Bags
     func loadBags() {
         isLoading = true
-        apiService.getBags { loadedBags in
-            self.bags = loadedBags
-            self.isLoading = false
+        if let userId = UserManager.shared.currentUser?.id {
+            apiService.getBags(userId: userId) { loadedBags in
+                self.bags = loadedBags
+                self.isLoading = false
+            }
+        } else {
+            isLoading = false
         }
     }
     
     // Add New Bag
     func addBag(bagName: String) {
         isLoading = true
-        let newBag = Bag(id: UUID().uuidString, name: bagName)
-        apiService.postBag(newBag) { success in
-            if success {
-                loadBags()
+        if let userId = UserManager.shared.currentUser?.id {
+            let newBag = Bag(
+                id: UUID().uuidString,
+                name: bagName,
+                userId: userId
+            )
+            apiService.postBag(newBag) { success in
+                if success {
+                    self.loadBags()
+                }
                 self.isLoading = false
             }
+        } else {
+            isLoading = false
         }
     }
 }

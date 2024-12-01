@@ -8,12 +8,12 @@
 import Foundation
 
 class ApiService {
-    let baseUrl = "https://qr-generator-services.onrender.com"
-   // let baseUrl = "http://localhost:3000"
+    // let baseUrl = "https://qr-generator-services.onrender.com"
+    let baseUrl = "http://localhost:3000"
     
     // GET BAGS
-    func getBags(completion: @escaping ([Bag]) -> Void) {
-        guard let url = URL(string: "\(baseUrl)/bags") else {
+    func getBags(userId: Int, completion: @escaping ([Bag]) -> Void) {
+        guard let url = URL(string: "\(baseUrl)/bags/\(userId)") else {
             print("Invalid URL")
             completion([])
             return

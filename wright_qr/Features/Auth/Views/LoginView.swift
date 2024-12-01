@@ -105,17 +105,13 @@ struct LoginView: View {
                                 .shadow(color: mainColor.opacity(0.3), radius: 5, x: 0, y: 2)
                             }
                             .disabled(isLoading)
-                            
-                            NavigationLink(
-                                destination: HomeView(),
-                                isActive: $navigateToHome,
-                                label: { EmptyView() }
-                            )
-                            .hidden()
                         }
                         .padding(.horizontal)
                     }
                 }
+            }
+            .navigationDestination(isPresented: $navigateToHome) {
+                HomeView()
             }
             .navigationBarHidden(true)
             .alert(isPresented: $showAlert) {
@@ -139,7 +135,9 @@ struct LoginView: View {
         AuthApiService.shared.login(email: email, password: password) { result in
             isLoading = false
             switch result {
-            case .success:
+            case .success(let user):
+                // Save the user locally
+                UserManager.shared.saveUser(user)
                 navigateToHome = true
             case .failure(let error):
                 handleAuthError(error)

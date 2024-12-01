@@ -7,13 +7,15 @@
 
 import Foundation
 
-struct Bag: Identifiable, Codable {
+struct Bag: Codable, Identifiable {
     let id: String
     let name: String
+    let userId: Int
     
     enum CodingKeys: String, CodingKey {
         case id = "bag_id"
         case name = "bag_name"
+        case userId = "user_id"
     }
 }
 

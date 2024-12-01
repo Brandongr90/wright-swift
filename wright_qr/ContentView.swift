@@ -8,13 +8,15 @@
 import SwiftUI
 
 struct ContentView: View {
+    @StateObject private var userManager = UserManager.shared
+    
     var body: some View {
-        LoginView()
-    }
-}
-
-struct ContentView_Previews: PreviewProvider {
-    static var previews: some View {
-        ContentView()
+        Group {
+            if userManager.isLoggedIn {
+                HomeView()
+            } else {
+                LoginView()
+            }
+        }
     }
 }
