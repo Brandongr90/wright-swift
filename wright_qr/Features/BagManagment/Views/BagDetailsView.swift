@@ -15,6 +15,7 @@ struct BagDetailsView: View {
     @State private var isLoading = false
     @State private var qrImage: UIImage? = nil
     @State private var showQRPreview = false
+    @State private var isGeneratingQR = false
     @Environment(\.colorScheme) var colorScheme
     let apiService = ApiService()
     
@@ -27,7 +28,7 @@ struct BagDetailsView: View {
                     ContentUnavailableView(
                         "No Items",
                         systemImage: "bag",
-                        description: Text("Add your first item to this bag")
+                        description: Text("Add your first item to this Climbing Gear Bag")
                     )
                 } else {
                     List {
@@ -61,7 +62,7 @@ struct BagDetailsView: View {
                                                 .font(.subheadline)
                                                 .foregroundColor(
                                                     item.conditionO.lowercased() == "new" ? .green :
-                                                    item.conditionO.lowercased() == "used" ? .orange : .gray
+                                                        item.conditionO.lowercased() == "used" ? .orange : .gray
                                                 )
                                                 .lineLimit(1)
                                         }
@@ -70,8 +71,8 @@ struct BagDetailsView: View {
                                     
                                     Spacer()
                                     
-//                                    Image(systemName: "chevron.right")
-//                                        .foregroundColor(.gray)
+                                    //                                    Image(systemName: "chevron.right")
+                                    //                                        .foregroundColor(.gray)
                                 }
                                 .padding(.vertical, 12)
                             }
@@ -118,7 +119,14 @@ struct BagDetailsView: View {
             }
         }
         .sheet(isPresented: $showQRPreview) {
-            QRPreviewView(qrImage: qrImage)
+            if let qrImage = qrImage {
+                QRPreviewView(qrImage: qrImage)
+            }
+        }
+        .overlay {
+            if isGeneratingQR {
+                LoadingView(message: "Generating QR Code...", mainColor: mainColor)
+            }
         }
         .sheet(isPresented: $showAddItemForm) {
             NewItemFormView(bag: bag) { newItem in
@@ -143,21 +151,26 @@ struct BagDetailsView: View {
     }
     
     func generateQR() {
-        let context = CIContext()
-        let filter = CIFilter.qrCodeGenerator()
-        filter.message = Data(bag.id.utf8)
-        if let outputImage = filter.outputImage {
-            let transform = CGAffineTransform(scaleX: 10, y: 10)
-            let scaledImage = outputImage.transformed(by: transform)
+        isGeneratingQR = true
+        
+        DispatchQueue.global(qos: .userInitiated).async {
+            let context = CIContext()
+            let filter = CIFilter.qrCodeGenerator()
+            let bagId = bag.id
+            filter.message = Data(bagId.utf8)
             
-            if let cgImage = context.createCGImage(scaledImage, from: scaledImage.extent) {
-                qrImage = UIImage(cgImage: cgImage)
-                showQRPreview = true
-            } else {
-                print("Failed to create CGImage from QR output")
+            if let outputImage = filter.outputImage {
+                let transform = CGAffineTransform(scaleX: 10, y: 10)
+                let scaledImage = outputImage.transformed(by: transform)
+                
+                if let cgImage = context.createCGImage(scaledImage, from: scaledImage.extent) {
+                    DispatchQueue.main.async {
+                        self.qrImage = UIImage(cgImage: cgImage)
+                        self.isGeneratingQR = false
+                        self.showQRPreview = true
+                    }
+                }
             }
-        } else {
-            print("Failed to generate QR code")
         }
     }
 }

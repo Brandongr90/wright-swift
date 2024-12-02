@@ -34,7 +34,7 @@ struct LoginView: View {
                     VStack(spacing: 32) {
                         // Header
                         VStack(spacing: 12) {
-                            Image("logoWT")
+                            Image("icontv")
                                 .resizable()
                                 .aspectRatio(contentMode: .fit)
                                 .frame(width: 190, height: 190)

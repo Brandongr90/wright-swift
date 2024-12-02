@@ -13,6 +13,10 @@ struct GenerateQRView: View {
     @State private var isLoading = false
     @State private var bags: [Bag] = []
     @State private var showAddBagForm = false
+    
+    @State private var showToast = false
+    @State private var toastMessage = ""
+    @State private var isSuccessToast = true
     let apiService = ApiService()
     
     var body: some View {
@@ -111,11 +115,20 @@ struct GenerateQRView: View {
             apiService.postBag(newBag) { success in
                 if success {
                     self.loadBags()
+                    self.toastMessage = "Bag created successfully!"
+                    self.isSuccessToast = true
+                } else {
+                    self.toastMessage = "Error creating bag"
+                    self.isSuccessToast = false
                 }
+                self.showToast = true
                 self.isLoading = false
             }
         } else {
             isLoading = false
+            self.toastMessage = "Error: User not found"
+            self.isSuccessToast = false
+            self.showToast = true
         }
     }
 }

@@ -5,9 +5,9 @@
 	<key>UILaunchScreen</key>
 	<dict>
 		<key>UIColorName</key>
-		<string>whiteColor</string>
+		<string>whiteeColor</string>
 		<key>UIImageName</key>
-		<string>logoWT</string>
+		<string>logoTV</string>
 	</dict>
 </dict>
 </plist>

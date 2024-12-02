@@ -34,7 +34,8 @@ class AuthApiService {
     private init() {}
     
     func login(email: String, password: String, completion: @escaping (Result<User, AuthError>) -> Void) {
-        guard let url = URL(string: "http://localhost:3000/auth") else {
+        // guard let url = URL(string: "http://localhost:3000/auth") else {
+        guard let url = URL(string: "https://qr-generator-services.onrender.com/auth") else {
             completion(.failure(.invalidURL))
             return
         }
