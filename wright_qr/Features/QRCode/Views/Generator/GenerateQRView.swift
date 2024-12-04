@@ -8,15 +8,15 @@
 import SwiftUI
 
 struct GenerateQRView: View {
+    /// Toast Handler
+    @State private var toasts: [Toast] = []
+    
     // Color scheme
     private let mainColor = Color(red: 0.04, green: 0.36, blue: 0.25)
     @State private var isLoading = false
     @State private var bags: [Bag] = []
     @State private var showAddBagForm = false
     
-    @State private var showToast = false
-    @State private var toastMessage = ""
-    @State private var isSuccessToast = true
     let apiService = ApiService()
     
     var body: some View {
@@ -88,6 +88,7 @@ struct GenerateQRView: View {
         .onAppear {
             loadBags()
         }
+        .interactiveToast($toasts)
     }
     
     // Get All Bags
@@ -115,21 +116,97 @@ struct GenerateQRView: View {
             apiService.postBag(newBag) { success in
                 if success {
                     self.loadBags()
-                    self.toastMessage = "Bag created successfully!"
-                    self.isSuccessToast = true
+                    withAnimation(.bouncy) {
+                        let toast = Toast { id in
+                            SuccessToastView(id)
+                        }
+                        self.toasts.append(toast)
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+                            if let index = self.toasts.firstIndex(where: { $0.id == toast.id }) {
+                                withAnimation(.bouncy) {
+                                    self.toasts.remove(at: index)
+                                }
+                            }
+                        }
+                    }
                 } else {
-                    self.toastMessage = "Error creating bag"
-                    self.isSuccessToast = false
+                    withAnimation(.bouncy) {
+                        let toast = Toast { id in
+                            ErrorToastView(id)
+                        }
+                        self.toasts.append(toast)
+                    }
                 }
-                self.showToast = true
                 self.isLoading = false
             }
         } else {
             isLoading = false
-            self.toastMessage = "Error: User not found"
-            self.isSuccessToast = false
-            self.showToast = true
         }
+    }
+    
+    // CUSTOM TOASTS
+    // Success
+    @ViewBuilder
+    func SuccessToastView(_ id: String) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: "checkmark.circle.fill")
+                .foregroundColor(.green)
+            
+            Text("Bolsa creada exitosamente")
+                .font(.callout)
+            
+            Spacer(minLength: 0)
+            
+            Button {
+                $toasts.delete(id)
+            } label: {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.title2)
+            }
+        }
+        .foregroundStyle(Color.primary)
+        .padding(.vertical, 12)
+        .padding(.leading, 15)
+        .padding(.trailing, 10)
+        .background {
+            Capsule()
+                .fill(.background)
+                .shadow(color: .black.opacity(0.06), radius: 3, x: -1, y: -3)
+                .shadow(color: .black.opacity(0.06), radius: 2, x: 1, y: 3)
+        }
+        .padding(.horizontal, 15)
+    }
+    
+    // Error
+    @ViewBuilder
+    func ErrorToastView(_ id: String) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: "xmark.circle.fill")
+                .foregroundColor(.red)
+            
+            Text("Error al crear la bolsa")
+                .font(.callout)
+            
+            Spacer(minLength: 0)
+            
+            Button {
+                $toasts.delete(id)
+            } label: {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.title2)
+            }
+        }
+        .foregroundStyle(Color.primary)
+        .padding(.vertical, 12)
+        .padding(.leading, 15)
+        .padding(.trailing, 10)
+        .background {
+            Capsule()
+                .fill(.background)
+                .shadow(color: .black.opacity(0.06), radius: 3, x: -1, y: -3)
+                .shadow(color: .black.opacity(0.06), radius: 2, x: 1, y: 3)
+        }
+        .padding(.horizontal, 15)
     }
 }
 

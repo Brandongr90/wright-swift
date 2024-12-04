@@ -7,9 +7,16 @@
 
 import Foundation
 
+enum APIError: Error {
+    case invalidURL
+    case invalidResponse
+    case networkError
+    case decodingError
+}
+
 class ApiService {
-    let baseUrl = "https://qr-generator-services.onrender.com"
-    // let baseUrl = "http://localhost:3000"
+    // let baseUrl = "https://qr-generator-services.onrender.com"
+    let baseUrl = APIConfig.baseURL
     
     // GET BAGS
     func getBags(userId: Int, completion: @escaping ([Bag]) -> Void) {
@@ -101,5 +108,20 @@ class ApiService {
                 completion(error == nil)
             }
         }.resume()
+    }
+    
+    // COUNT BAGS
+    func getBagsCount(endpoint: String, userId: Int) async throws -> Int {
+        guard let url = URL(string: "\(baseUrl)/\(endpoint)/count/\(userId)") else {
+            throw APIError.invalidURL
+        }
+        
+        let (data, _) = try await URLSession.shared.data(from: url)
+        let response = try JSONDecoder().decode(CountResponse.self, from: data)
+        return response.count
+    }
+
+    struct CountResponse: Codable {
+        let count: Int
     }
 }

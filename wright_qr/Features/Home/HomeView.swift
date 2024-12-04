@@ -11,6 +11,10 @@ struct HomeView: View {
     @StateObject private var userManager = UserManager.shared
     private let mainColor = Color(red: 0.04, green: 0.36, blue: 0.25)
     @State private var selectedTab = 0
+    @State private var isLoading = false
+    @State private var bagsCount: Int = 0
+    @State private var itemsCount: Int = 0
+    let apiService = ApiService()
     
     var body: some View {
         NavigationStack {
@@ -19,91 +23,92 @@ struct HomeView: View {
                     .ignoresSafeArea()
                 
                 ScrollView {
-                    VStack(spacing: 24) {
-                        // Header con información del usuario
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Welcome back,")
-                                .font(.title2)
-                                .foregroundColor(.secondary)
-                            Text("\(userManager.currentUser?.name ?? "") \(userManager.currentUser?.last_name ?? "")")
-                                .font(.title)
-                                .fontWeight(.bold)
-                                .foregroundColor(.primary)
+                    VStack(spacing: 28) {
+                        // Header Profile
+                        HStack {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Welcome back,")
+                                    .font(.headline)
+                                    .foregroundColor(.secondary)
+                                Text("\(userManager.currentUser?.name ?? "") \(userManager.currentUser?.last_name ?? "")")
+                                    .font(.title2)
+                                    .fontWeight(.bold)
+                            }
+                            Spacer()
+                            Circle()
+                                .fill(mainColor.opacity(0.1))
+                                .frame(width: 50, height: 50)
+                                .overlay(
+                                    Image(systemName: "person.crop.circle.fill")
+                                        .foregroundColor(mainColor)
+                                        .font(.title2)
+                                )
                         }
-                        .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.horizontal)
                         .padding(.top, 20)
                         
-                        // Logo Area
-                        VStack(spacing: 12) {
-                            Image(systemName: "qrcode.viewfinder")
-                                .font(.system(size: 60))
-                                .foregroundColor(mainColor)
-                            
-                            Text("QR Manager")
-                                .font(.system(size: 28, weight: .bold, design: .rounded))
-                                .foregroundColor(.primary)
-                            
-                            Text("Organize and track your items easily")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                        }
-                        .padding(.vertical, 10)
-                        
-                        // Main Actions
-                        VStack(spacing: 16) {
+                        // Quick Actions Grid
+                        LazyVGrid(columns: [
+                            GridItem(.flexible()),
+                            GridItem(.flexible())
+                        ], spacing: 16) {
                             NavigationLink(destination: GenerateQRView()) {
-                                ActionButton(
+                                QuickActionCard(
                                     icon: "plus.square.fill",
-                                    title: "Bags | Generate QR",
-                                    subtitle: "Create a new QR code for your items",
+                                    title: "Generate QR",
                                     color: mainColor
-                                ).multilineTextAlignment(.leading)
+                                )
                             }
                             
                             NavigationLink(destination: ScanQRView()) {
-                                ActionButton(
+                                QuickActionCard(
                                     icon: "qrcode.viewfinder",
                                     title: "Scan QR",
-                                    subtitle: "Scan an existing QR code",
                                     color: mainColor
                                 )
                             }
                         }
                         .padding(.horizontal)
                         
-                        // Recent Activity Section
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("Recent Activity")
-                                .font(.headline)
-                                .foregroundColor(.primary)
+                        // Stats Overview
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("Overview")
+                                .font(.title3)
+                                .fontWeight(.bold)
                                 .padding(.horizontal)
                             
-                            ScrollView(.horizontal, showsIndicators: false) {
-                                HStack(spacing: 16) {
-                                    ForEach(0..<3) { _ in
-                                        RecentActivityCard()
-                                    }
-                                }
-                                .padding(.horizontal)
+                            HStack(spacing: 16) {
+                                StatCard(
+                                    title: "Total Bags",
+                                    value: bagsCount,
+                                    icon: "bag.fill",
+                                    color: .blue
+                                )
+                                
+                                StatCard(
+                                    title: "Active Items",
+                                    value: itemsCount,
+                                    icon: "shippingbox.fill",
+                                    color: .green
+                                )
                             }
+                            .padding(.horizontal)
                         }
                     }
+                }
+                // Loading
+                if isLoading {
+                    LoadingView(message: "Loading...", mainColor: mainColor)
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Menu {
-                        Button(action: {
-                            // Add settings action here
-                        }) {
+                        Button(action: {}) {
                             Label("Settings", systemImage: "gear")
                         }
-                        
-                        Button(action: {
-                            userManager.logout()
-                        }) {
+                        Button(action: { userManager.logout() }) {
                             Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
                         }
                     } label: {
@@ -113,74 +118,101 @@ struct HomeView: View {
                 }
             }
         }
+        .onAppear {
+            bagsCountFunc()
+            itemsCountFunc()
+        }
+    }
+    
+    // Functions
+    func bagsCountFunc() {
+        isLoading = true
+        let userId = UserManager.shared.currentUser?.id ?? 0
+        Task {
+            do {
+                bagsCount = try await apiService.getBagsCount(endpoint: "bags",userId: userId)
+                isLoading = false
+            } catch {
+                print("Error getting bags count: \(error)")
+            }
+        }
+    }
+    
+    func itemsCountFunc() {
+        isLoading = true
+        let userId = UserManager.shared.currentUser?.id ?? 0
+        Task {
+            do {
+                itemsCount = try await apiService.getBagsCount(endpoint: "items", userId: userId)
+                isLoading = false
+            } catch {
+                print("Error getting bags count: \(error)")
+            }
+        }
     }
 }
 
-// Mantener los componentes ActionButton y RecentActivityCard existentes
-struct ActionButton: View {
+struct QuickActionCard: View {
     let icon: String
     let title: String
-    let subtitle: String
     let color: Color
     
     var body: some View {
-        HStack(spacing: 20) {
-            Image(systemName: icon)
-                .font(.system(size: 30))
-                .foregroundColor(color)
+        VStack(spacing: 16) {
+            Circle()
+                .fill(color.opacity(0.1))
                 .frame(width: 60, height: 60)
-                .background(color.opacity(0.1))
-                .clipShape(RoundedRectangle(cornerRadius: 15))
+                .overlay(
+                    Image(systemName: icon)
+                        .font(.title2)
+                        .foregroundColor(color)
+                )
             
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .font(.headline)
-                    .foregroundColor(.primary)
-                
-                Text(subtitle)
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .lineLimit(2)
-            }
-            
-            Spacer()
-            
-            Image(systemName: "chevron.right")
-                .foregroundColor(.secondary)
+            Text(title)
+                .font(.headline)
+                .foregroundColor(.primary)
         }
-        .padding()
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 20)
         .background(Color(uiColor: .systemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 16))
-        .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
+        .clipShape(RoundedRectangle(cornerRadius: 20))
+        .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
     }
 }
 
-struct RecentActivityCard: View {
+struct StatCard: View {
+    let title: String
+    let value: Int
+    let icon: String
+    let color: Color
+    
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Image(systemName: "bag.fill")
-                .font(.title2)
-                .foregroundColor(.white)
-                .frame(width: 40, height: 40)
-                .background(Color.blue)
-                .clipShape(Circle())
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Circle()
+                    .fill(color.opacity(0.1))
+                    .frame(width: 40, height: 40)
+                    .overlay(
+                        Image(systemName: icon)
+                            .foregroundColor(color)
+                    )
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .foregroundColor(.secondary)
+            }
             
-            Text("Bag Name")
-                .font(.headline)
-                .foregroundColor(.primary)
+            Text(String(value))
+                .font(.title)
+                .fontWeight(.bold)
             
-            Text("3 items")
+            Text(title)
                 .font(.subheadline)
-                .foregroundColor(.secondary)
-            
-            Text("2 min ago")
-                .font(.caption)
                 .foregroundColor(.secondary)
         }
         .padding()
-        .frame(width: 140)
+        .frame(maxWidth: .infinity)
         .background(Color(uiColor: .systemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 16))
-        .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
+        .clipShape(RoundedRectangle(cornerRadius: 20))
+        .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
     }
 }
