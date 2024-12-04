@@ -29,11 +29,11 @@ struct GenerateQRView: View {
                 VStack(spacing: 24) {
                     // Header Area
                     VStack(spacing: 12) {
-                        Image(systemName: "bag.fill.badge.plus")
+                        Image(systemName: "figure.climbing")
                             .font(.system(size: 60))
                             .foregroundColor(mainColor)
                         
-                        Text("All Bags")
+                        Text("All Climbing Gear Bags")
                             .font(.system(size: 28, weight: .bold, design: .rounded))
                             .foregroundColor(.primary)
                         
@@ -217,7 +217,7 @@ struct BagCard: View {
     
     var body: some View {
         HStack(spacing: 20) {
-            Image(systemName: "bag.fill")
+            Image(systemName: "duffle.bag")
                 .font(.system(size: 24))
                 .foregroundColor(mainColor)
                 .frame(width: 50, height: 50)

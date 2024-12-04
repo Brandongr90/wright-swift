@@ -17,105 +17,118 @@ struct HomeView: View {
     let apiService = ApiService()
     
     var body: some View {
-        NavigationStack {
-            ZStack {
-                Color(uiColor: .systemBackground)
-                    .ignoresSafeArea()
-                
-                ScrollView {
-                    VStack(spacing: 28) {
-                        // Header Profile
-                        HStack {
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Welcome back,")
-                                    .font(.headline)
-                                    .foregroundColor(.secondary)
-                                Text("\(userManager.currentUser?.name ?? "") \(userManager.currentUser?.last_name ?? "")")
-                                    .font(.title2)
-                                    .fontWeight(.bold)
-                            }
-                            Spacer()
-                            Circle()
-                                .fill(mainColor.opacity(0.1))
-                                .frame(width: 50, height: 50)
-                                .overlay(
-                                    Image(systemName: "person.crop.circle.fill")
-                                        .foregroundColor(mainColor)
-                                        .font(.title2)
-                                )
-                        }
-                        .padding(.horizontal)
-                        .padding(.top, 20)
+        ScrollView {
+            VStack(spacing: 20) {
+                // Header Profile Area
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("\(userManager.currentUser?.name ?? "") \(userManager.currentUser?.last_name ?? "")")
+                            .font(.title2)
+                            .fontWeight(.semibold)
                         
-                        // Quick Actions Grid
-                        LazyVGrid(columns: [
-                            GridItem(.flexible()),
-                            GridItem(.flexible())
-                        ], spacing: 16) {
-                            NavigationLink(destination: GenerateQRView()) {
-                                QuickActionCard(
-                                    icon: "plus.square.fill",
-                                    title: "Generate QR",
-                                    color: mainColor
-                                )
-                            }
-                            
-                            NavigationLink(destination: ScanQRView()) {
-                                QuickActionCard(
-                                    icon: "qrcode.viewfinder",
-                                    title: "Scan QR",
-                                    color: mainColor
-                                )
-                            }
-                        }
-                        .padding(.horizontal)
-                        
-                        // Stats Overview
-                        VStack(alignment: .leading, spacing: 16) {
-                            Text("Overview")
-                                .font(.title3)
-                                .fontWeight(.bold)
-                                .padding(.horizontal)
-                            
-                            HStack(spacing: 16) {
-                                StatCard(
-                                    title: "Total Bags",
-                                    value: bagsCount,
-                                    icon: "bag.fill",
-                                    color: .blue
-                                )
-                                
-                                StatCard(
-                                    title: "Active Items",
-                                    value: itemsCount,
-                                    icon: "shippingbox.fill",
-                                    color: .green
-                                )
-                            }
-                            .padding(.horizontal)
-                        }
+                        Text("Safety Supervisor")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
                     }
-                }
-                // Loading
-                if isLoading {
-                    LoadingView(message: "Loading...", mainColor: mainColor)
-                }
-            }
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Menu {
-                        Button(action: {}) {
-                            Label("Settings", systemImage: "gear")
-                        }
-                        Button(action: { userManager.logout() }) {
-                            Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
-                        }
-                    } label: {
-                        Image(systemName: "ellipsis.circle")
+                    Spacer()
+                    
+                    // Profile Image
+                    ZStack {
+                        Circle()
+                            .fill(mainColor.opacity(0.1))
+                            .frame(width: 40, height: 40)
+                        Image(systemName: "person.crop.circle.fill")
+                            .resizable()
+                            .frame(width: 35, height: 35)
                             .foregroundColor(mainColor)
                     }
                 }
+                .padding(.horizontal)
+                .padding(.top)
+                
+                // Featured Collection Card
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("General Data")
+                            .font(.title2)
+                            .fontWeight(.bold)
+                        
+                        Spacer()
+                        
+                        Text("02")
+                            .font(.subheadline)
+                            .padding(8)
+                            .background(Color.black.opacity(0.1))
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                    }
+                    
+                    Text("Here you have a general view")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                    
+                    // Stats Cards in a horizontal scroll
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 15) {
+                            StatCard(
+                                title: "Total Climbing Gear Bags",
+                                value: bagsCount,
+                                icon: "bag.fill",
+                                color: .blue
+                            )
+                            
+                            StatCard(
+                                title: "Active Items",
+                                value: itemsCount,
+                                icon: "shippingbox.fill",
+                                color: .green
+                            )
+                        }
+                    }
+                    .padding(.top, 10)
+                }
+                .padding()
+                .background(Color(uiColor: .systemBackground))
+                .clipShape(RoundedRectangle(cornerRadius: 25))
+                .shadow(color: Color.black.opacity(0.05), radius: 10)
+                .padding(.horizontal)
+                
+                // Quick Actions Section
+                VStack(alignment: .leading, spacing: 15) {
+                    Text("Quick Actions")
+                        .font(.title3)
+                        .fontWeight(.bold)
+                        .padding(.horizontal)
+                    
+                    LazyVGrid(columns: [
+                        GridItem(.flexible()),
+                        GridItem(.flexible())
+                    ], spacing: 16) {
+                        NavigationLink(destination: GenerateQRView()) {
+                            ModernQuickActionCard(
+                                icon: "qrcode",
+                                title: "Generate QR",
+                                description: "Create new QR codes and manage existing ones",
+                                color: mainColor
+                            )
+                        }
+                        
+                        NavigationLink(destination: ScanQRView()) {
+                            ModernQuickActionCard(
+                                icon: "qrcode.viewfinder",
+                                title: "Scan QR",
+                                description: "Scan existing codes",
+                                color: mainColor
+                            )
+                        }
+                    }
+                    .padding(.horizontal)
+                }
+            }
+        }
+        .background(Color(uiColor: .systemBackground).ignoresSafeArea())
+        .overlay {
+            if isLoading {
+                LoadingView(message: "Loading...", mainColor: mainColor)
             }
         }
         .onAppear {
@@ -124,7 +137,7 @@ struct HomeView: View {
         }
     }
     
-    // Functions
+    // Existing functions remain the same
     func bagsCountFunc() {
         isLoading = true
         let userId = UserManager.shared.currentUser?.id ?? 0
@@ -152,31 +165,39 @@ struct HomeView: View {
     }
 }
 
-struct QuickActionCard: View {
+// Modern Quick Action Card with more details
+struct ModernQuickActionCard: View {
     let icon: String
     let title: String
+    let description: String
     let color: Color
     
     var body: some View {
-        VStack(spacing: 16) {
-            Circle()
-                .fill(color.opacity(0.1))
-                .frame(width: 60, height: 60)
-                .overlay(
-                    Image(systemName: icon)
-                        .font(.title2)
-                        .foregroundColor(color)
-                )
+        VStack(alignment: .leading, spacing: 12) {
+            Image(systemName: icon)
+                .font(.title2)
+                .foregroundColor(color)
+                .padding(12)
+                .background(color.opacity(0.1))
+                .clipShape(RoundedRectangle(cornerRadius: 12))
             
             Text(title)
                 .font(.headline)
                 .foregroundColor(.primary)
+            
+            Text(description)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .lineLimit(2)
+            
+            Spacer()
         }
+        .padding()
+        .frame(height: 160)
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 20)
         .background(Color(uiColor: .systemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 20))
-        .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
+        .shadow(color: Color.black.opacity(0.05), radius: 10)
     }
 }
 
@@ -202,7 +223,7 @@ struct StatCard: View {
             }
             
             Text(String(value))
-                .font(.title)
+                .font(.title2)
                 .fontWeight(.bold)
             
             Text(title)
@@ -210,7 +231,7 @@ struct StatCard: View {
                 .foregroundColor(.secondary)
         }
         .padding()
-        .frame(maxWidth: .infinity)
+        .frame(width: 160)
         .background(Color(uiColor: .systemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 20))
         .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)

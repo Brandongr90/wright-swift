@@ -30,7 +30,7 @@ struct NewBagFormView: View {
                             .font(.system(size: 60))
                             .foregroundColor(mainColor)
                         
-                        Text("New Bag")
+                        Text("New Climbing Gear Bag")
                             .font(.system(size: 28, weight: .bold, design: .rounded))
                             .foregroundColor(.primary)
                         
@@ -48,7 +48,7 @@ struct NewBagFormView: View {
                         
                         TextField("", text: $bagName)
                             .placeholder(when: bagName.isEmpty) {
-                                Text("Enter a name for your bag")
+                                Text("Enter the owner name")
                                     .foregroundColor(.secondary)
                             }
                             .padding()

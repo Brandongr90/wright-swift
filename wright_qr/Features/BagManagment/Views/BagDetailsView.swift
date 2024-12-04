@@ -23,109 +23,90 @@ struct BagDetailsView: View {
     
     var body: some View {
         ZStack {
-            VStack {
-                if items.isEmpty {
-                    ContentUnavailableView(
-                        "No Items",
-                        systemImage: "bag",
-                        description: Text("Add your first item to this Climbing Gear Bag")
+            Color(uiColor: .systemBackground)
+                .ignoresSafeArea()
+            
+            VStack(spacing: 0) {
+                // Header Stats
+                HStack(spacing: 20) {
+                    StatisticView(
+                        title: "Total Items",
+                        value: "\(items.count)",
+                        icon: "cube.box.fill",
+                        color: mainColor
                     )
-                } else {
-                    List {
-                        ForEach(items) { item in
-                            NavigationLink(destination: ItemDetailsView(item: item)) {
-                                HStack(spacing: 16) {
-                                    ZStack {
-                                        Circle()
-                                            .fill(mainColor.opacity(0.1))
-                                            .frame(width: 50, height: 50)
-                                        Image(systemName: "cube.box.fill")
-                                            .foregroundColor(mainColor)
-                                            .font(.title2)
-                                    }
-                                    
-                                    VStack(alignment: .leading, spacing: 8) {
-                                        Text(item.itemDescription)
-                                            .font(.headline)
-                                            .foregroundColor(.primary)
-                                            .lineLimit(1)
-                                        
-                                        HStack {
-                                            Label(item.brand.isEmpty ? "N/A" : item.brand, systemImage: "tag.fill")
-                                                .font(.subheadline)
-                                                .foregroundColor(.secondary)
-                                                .lineLimit(1)
-                                            
-                                            Spacer()
-                                            
-                                            Label(item.conditionO.isEmpty ? "N/A" : item.conditionO, systemImage: "checkmark.circle.fill")
-                                                .font(.subheadline)
-                                                .foregroundColor(
-                                                    item.conditionO.lowercased() == "new" ? .green :
-                                                        item.conditionO.lowercased() == "used" ? .orange : .gray
-                                                )
-                                                .lineLimit(1)
-                                        }
-                                    }
-                                    .padding(.leading, 8)
-                                    
-                                    Spacer()
-                                    
-                                    //                                    Image(systemName: "chevron.right")
-                                    //                                        .foregroundColor(.gray)
-                                }
-                                .padding(.vertical, 12)
-                            }
-                            .listRowBackground(Color.clear)
-                        }
+                    
+                    StatisticView(
+                        title: "New Items",
+                        value: "\(items.filter { $0.conditionO.lowercased() == "new" }.count)",
+                        icon: "sparkles",
+                        color: .green
+                    )
+                }
+                .padding()
+                
+                if items.isEmpty {
+                    VStack {
+                        Spacer()
+                        ContentUnavailableView(
+                            "No Items Yet",
+                            systemImage: "cube.box",
+                            description: Text("Start by adding your first item to this bag")
+                        )
+                        .offset(y: -50)
+                        Spacer()
                     }
-                    .listStyle(PlainListStyle())
+                } else {
+                    // Items List
+                    ScrollView {
+                        LazyVStack(spacing: 16) {
+                            ForEach(items) { item in
+                                NavigationLink(destination: ItemDetailsView(item: item)) {
+                                    ModernItemCard(item: item, mainColor: mainColor)
+                                }
+                            }
+                        }
+                        .padding()
+                    }
                 }
                 
+                // Bottom Action Buttons
                 VStack(spacing: 12) {
-                    Button(action: {
+                    ActionButton(
+                        title: "Add New Item",
+                        icon: "plus.circle.fill",
+                        color: mainColor
+                    ) {
                         showAddItemForm = true
-                    }) {
-                        HStack {
-                            Image(systemName: "plus.circle.fill")
-                            Text("Add New Item")
-                        }
-                        .foregroundColor(.white)
-                        .padding()
-                        .frame(maxWidth: .infinity)
-                        .background(mainColor)
-                        .cornerRadius(10)
                     }
                     
-                    Button(action: {
+                    ActionButton(
+                        title: "Generate QR Code",
+                        icon: "qrcode",
+                        color: mainColor
+                    ) {
                         generateQR()
-                    }) {
-                        HStack {
-                            Image(systemName: "qrcode")
-                            Text("Generate QR for Bag")
-                        }
-                        .foregroundColor(.white)
-                        .padding()
-                        .frame(maxWidth: .infinity)
-                        .background(mainColor)
-                        .cornerRadius(10)
                     }
                 }
                 .padding()
+                .background(
+                    Rectangle()
+                        .fill(Color(uiColor: .systemBackground))
+                        .shadow(color: Color.black.opacity(0.05), radius: 15, x: 0, y: -5)
+                )
             }
             
             if isLoading {
                 LoadingView(message: "Loading items...", mainColor: mainColor)
             }
+            
+            if isGeneratingQR {
+                LoadingView(message: "Generating QR Code...", mainColor: mainColor)
+            }
         }
         .sheet(isPresented: $showQRPreview) {
             if let qrImage = qrImage {
                 QRPreviewView(qrImage: qrImage)
-            }
-        }
-        .overlay {
-            if isGeneratingQR {
-                LoadingView(message: "Generating QR Code...", mainColor: mainColor)
             }
         }
         .sheet(isPresented: $showAddItemForm) {
@@ -135,11 +116,13 @@ struct BagDetailsView: View {
             }
         }
         .navigationTitle(bag.name)
+        .navigationBarTitleDisplayMode(.large)
         .onAppear {
             loadItems()
         }
     }
     
+    // Existing functions remain the same
     func loadItems() {
         isLoading = true
         apiService.getItemsByBag(for: bag.id) { loadedItems in
@@ -171,6 +154,113 @@ struct BagDetailsView: View {
                     }
                 }
             }
+        }
+    }
+}
+
+// New Components
+struct StatisticView: View {
+    let title: String
+    let value: String
+    let icon: String
+    let color: Color
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Image(systemName: icon)
+                    .foregroundColor(color)
+                Text(title)
+                    .foregroundColor(.secondary)
+                    .font(.subheadline)
+            }
+            
+            Text(value)
+                .font(.title2)
+                .fontWeight(.bold)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding()
+        .background(color.opacity(0.1))
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+    }
+}
+
+struct ModernItemCard: View {
+    let item: Item
+    let mainColor: Color
+    
+    var body: some View {
+        HStack(spacing: 16) {
+            // Icon Container
+            ZStack {
+                Circle()
+                    .fill(mainColor.opacity(0.1))
+                    .frame(width: 50, height: 50)
+                Image(systemName: "cube.box.fill")
+                    .foregroundColor(mainColor)
+                    .font(.title2)
+            }
+            
+            // Item Details
+            VStack(alignment: .leading, spacing: 8) {
+                Text(item.itemDescription)
+                    .font(.headline)
+                    .foregroundColor(.primary)
+                
+                HStack(spacing: 12) {
+                    Label(item.brand.isEmpty ? "N/A" : item.brand, systemImage: "tag.fill")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                    
+                    Spacer()
+                    
+                    // Condition Badge
+                    Text(item.conditionO.isEmpty ? "N/A" : item.conditionO)
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(
+                            Capsule()
+                                .fill(item.conditionO.lowercased() == "new" ? Color.green.opacity(0.2) :
+                                        item.conditionO.lowercased() == "used" ? Color.orange.opacity(0.2) : Color.gray.opacity(0.2))
+                        )
+                        .foregroundColor(item.conditionO.lowercased() == "new" ? .green :
+                                        item.conditionO.lowercased() == "used" ? .orange : .gray)
+                }
+            }
+            
+            Image(systemName: "chevron.right")
+                .foregroundColor(.secondary)
+                .font(.subheadline)
+        }
+        .padding()
+        .background(Color(uiColor: .systemBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 2)
+    }
+}
+
+struct ActionButton: View {
+    let title: String
+    let icon: String
+    let color: Color
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            HStack {
+                Image(systemName: icon)
+                    .font(.headline)
+                Text(title)
+                    .fontWeight(.semibold)
+            }
+            .foregroundColor(.white)
+            .frame(maxWidth: .infinity)
+            .frame(height: 54)
+            .background(color)
+            .clipShape(RoundedRectangle(cornerRadius: 16))
         }
     }
 }

@@ -27,7 +27,7 @@ struct MainTabView: View {
             }
             .tabItem {
                 Image(systemName: "qrcode")
-                Text("Generar")
+                Text("Generate")
             }
             .tag(1)
             
@@ -36,7 +36,7 @@ struct MainTabView: View {
             }
             .tabItem {
                 Image(systemName: "qrcode.viewfinder")
-                Text("Escanear")
+                Text("Scan")
             }
             .tag(2)
             
@@ -45,7 +45,7 @@ struct MainTabView: View {
             }
             .tabItem {
                 Image(systemName: "person.fill")
-                Text("Perfil")
+                Text("Profile")
             }
             .tag(3)
         }
