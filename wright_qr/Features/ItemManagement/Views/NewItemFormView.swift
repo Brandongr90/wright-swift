@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct NewItemFormView: View {
+    @State private var toasts: [Toast] = []
+    
     @Environment(\.dismiss) private var dismiss
     private let mainColor = Color(red: 0.04, green: 0.36, blue: 0.25)
     
@@ -185,6 +187,7 @@ struct NewItemFormView: View {
             }
             .navigationBarHidden(true)
         }
+        .interactiveToast($toasts)
     }
     
     func addItem() {
@@ -206,10 +209,94 @@ struct NewItemFormView: View {
         
         apiService.postItem(newItem) { success in
             if success {
+                withAnimation(.bouncy) {
+                    let toast = Toast { id in
+                        SuccessToastView(id)
+                    }
+                    self.toasts.append(toast)
+                    // Auto dismiss after 5 seconds
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+                        if let index = self.toasts.firstIndex(where: { $0.id == toast.id }) {
+                            withAnimation(.bouncy) {
+                                self.toasts.remove(at: index)
+                            }
+                        }
+                    }
+                }
                 onSave(newItem)
                 dismiss()
+            } else {
+                withAnimation(.bouncy) {
+                    let toast = Toast { id in
+                        ErrorToastView(id)
+                    }
+                    self.toasts.append(toast)
+                }
             }
         }
+    }
+    
+    // CUSTOM TOASTS
+    @ViewBuilder
+    func SuccessToastView(_ id: String) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: "checkmark.circle.fill")
+                .foregroundColor(.green)
+            
+            Text("Item creado exitosamente")
+                .font(.callout)
+            
+            Spacer(minLength: 0)
+            
+            Button {
+                $toasts.delete(id)
+            } label: {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.title2)
+            }
+        }
+        .foregroundStyle(Color.primary)
+        .padding(.vertical, 12)
+        .padding(.leading, 15)
+        .padding(.trailing, 10)
+        .background {
+            Capsule()
+                .fill(.background)
+                .shadow(color: .black.opacity(0.06), radius: 3, x: -1, y: -3)
+                .shadow(color: .black.opacity(0.06), radius: 2, x: 1, y: 3)
+        }
+        .padding(.horizontal, 15)
+    }
+    
+    @ViewBuilder
+    func ErrorToastView(_ id: String) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: "xmark.circle.fill")
+                .foregroundColor(.red)
+            
+            Text("Error al crear el item")
+                .font(.callout)
+            
+            Spacer(minLength: 0)
+            
+            Button {
+                $toasts.delete(id)
+            } label: {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.title2)
+            }
+        }
+        .foregroundStyle(Color.primary)
+        .padding(.vertical, 12)
+        .padding(.leading, 15)
+        .padding(.trailing, 10)
+        .background {
+            Capsule()
+                .fill(.background)
+                .shadow(color: .black.opacity(0.06), radius: 3, x: -1, y: -3)
+                .shadow(color: .black.opacity(0.06), radius: 2, x: 1, y: 3)
+        }
+        .padding(.horizontal, 15)
     }
 }
 

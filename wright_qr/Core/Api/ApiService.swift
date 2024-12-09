@@ -120,8 +120,83 @@ class ApiService {
         let response = try JSONDecoder().decode(CountResponse.self, from: data)
         return response.count
     }
-
+    
     struct CountResponse: Codable {
         let count: Int
+    }
+    
+    // UPDATE ITEM
+    func updateItem(_ item: Item, completion: @escaping (Bool) -> Void) {
+        guard let url = URL(string: "\(baseUrl)/items/\(item.id)") else {
+            completion(false)
+            return
+        }
+        
+        let itemData: [String: Any] = [
+            "item_description": item.itemDescription,
+            "model_name": item.modelName,
+            "brand": item.brand,
+            "comment": item.comment,
+            "serial_number": item.serialNumber,
+            "condition_o": item.conditionO,
+            "inspection": item.inspection,
+            "inspection_date": item.inspectionDate,
+            "inspector_name": item.inspectorName,
+            "inspection_date_1": item.inspectionDate1,
+            "expiration_date": item.expirationDate,
+            "bag_id": item.bagID
+        ]
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "PUT"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        do {
+            request.httpBody = try JSONSerialization.data(withJSONObject: itemData)
+        } catch {
+            print("Error encoding item: \(error)")
+            completion(false)
+            return
+        }
+        
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            DispatchQueue.main.async {
+                if let httpResponse = response as? HTTPURLResponse,
+                   httpResponse.statusCode == 200 {
+                    completion(true)
+                } else {
+                    completion(false)
+                }
+            }
+        }.resume()
+    }
+    
+    func getItemById(_ id: Int, completion: @escaping (Item?) -> Void) {
+        let urlString = "\(baseUrl)/items/\(id)"
+        
+        guard let url = URL(string: "\(baseUrl)/items/\(id)") else {
+            completion(nil)
+            return
+        }
+        
+        print("Iniciando petición GET para item: \(id)")
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            DispatchQueue.main.async {
+                if let error = error {
+                    completion(nil)
+                    return
+                }
+                guard let data = data else {
+                    completion(nil)
+                    return
+                }
+                do {
+                    let item = try JSONDecoder().decode(Item.self, from: data)
+                    completion(item)
+                } catch {
+                    completion(nil)
+                }
+            }
+        }.resume()
     }
 }

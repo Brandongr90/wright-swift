@@ -8,6 +8,6 @@
 import Foundation
 
 enum APIConfig {
-    // static let baseURL = "https://qr-generator-services.onrender.com"
-    static let baseURL = "http://localhost:3000"
+    static let baseURL = "https://qr-generator-services.onrender.com"
+    // static let baseURL = "http://localhost:3000"
 }
