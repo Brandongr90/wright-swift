@@ -18,114 +18,32 @@ struct HomeView: View {
     
     var body: some View {
         ScrollView {
-            VStack(spacing: 20) {
-                // Header Profile Area
-                HStack {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("\(userManager.currentUser?.name ?? "") \(userManager.currentUser?.last_name ?? "")")
-                            .font(.title2)
-                            .fontWeight(.semibold)
-                        
-                        Text("Safety Supervisor")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                    }
-                    Spacer()
-                    
-                    // Profile Image
-                    ZStack {
-                        Circle()
-                            .fill(mainColor.opacity(0.1))
-                            .frame(width: 40, height: 40)
-                        Image(systemName: "person.crop.circle.fill")
-                            .resizable()
-                            .frame(width: 35, height: 35)
-                            .foregroundColor(mainColor)
-                    }
-                }
-                .padding(.horizontal)
-                .padding(.top)
+            VStack(spacing: 24) {
+                // Header Profile mejorado
+                ProfileHeader(
+                    name: "\(userManager.currentUser?.name ?? "") \(userManager.currentUser?.last_name ?? "")",
+                    role: "Safety Supervisor"
+                )
                 
-                // Featured Collection Card
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        Text("General Data")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                        
-                        Spacer()
-                        
-                        Text("02")
-                            .font(.subheadline)
-                            .padding(8)
-                            .background(Color.black.opacity(0.1))
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                    }
-                    
-                    Text("Here you have a general view")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                    
-                    // Stats Cards in a horizontal scroll
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 15) {
-                            StatCard(
-                                title: "Total Climbing Gear Bags",
-                                value: bagsCount,
-                                icon: "bag.fill",
-                                color: .blue
-                            )
-                            
-                            StatCard(
-                                title: "Active Items",
-                                value: itemsCount,
-                                icon: "shippingbox.fill",
-                                color: .green
-                            )
-                        }
-                    }
-                    .padding(.top, 10)
-                }
-                .padding()
-                .background(Color(uiColor: .systemBackground))
-                .clipShape(RoundedRectangle(cornerRadius: 25))
-                .shadow(color: Color.black.opacity(0.05), radius: 10)
-                .padding(.horizontal)
+                // Vista general mejorada
+                DashboardCard(bagsCount: bagsCount, itemsCount: itemsCount)
                 
-                // Quick Actions Section
-                VStack(alignment: .leading, spacing: 15) {
-                    Text("Quick Actions")
-                        .font(.title3)
-                        .fontWeight(.bold)
-                        .padding(.horizontal)
-                    
-                    LazyVGrid(columns: [
-                        GridItem(.flexible()),
-                        GridItem(.flexible())
-                    ], spacing: 16) {
-                        NavigationLink(destination: GenerateQRView()) {
-                            ModernQuickActionCard(
-                                icon: "qrcode",
-                                title: "Generate QR",
-                                description: "Create new QR codes and manage existing ones",
-                                color: mainColor
-                            )
-                        }
-                        
-                        NavigationLink(destination: ScanQRView()) {
-                            ModernQuickActionCard(
-                                icon: "qrcode.viewfinder",
-                                title: "Scan QR",
-                                description: "Scan existing codes",
-                                color: mainColor
-                            )
-                        }
-                    }
-                    .padding(.horizontal)
-                }
+                // Imagen decorativa
+                DecorativeImageView()
             }
+            .padding(.vertical)
         }
-        .background(Color(uiColor: .systemBackground).ignoresSafeArea())
+        .background(
+            LinearGradient(
+                colors: [
+                    Color(uiColor: .systemBackground),
+                    Color(uiColor: .systemBackground).opacity(0.95)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .ignoresSafeArea()
+        )
         .overlay {
             if isLoading {
                 LoadingView(message: "Loading...", mainColor: mainColor)
@@ -137,7 +55,6 @@ struct HomeView: View {
         }
     }
     
-    // Existing functions remain the same
     func bagsCountFunc() {
         isLoading = true
         let userId = UserManager.shared.currentUser?.id ?? 0
@@ -165,43 +82,102 @@ struct HomeView: View {
     }
 }
 
-// Modern Quick Action Card with more details
-struct ModernQuickActionCard: View {
-    let icon: String
-    let title: String
-    let description: String
-    let color: Color
+struct ProfileHeader: View {
+    let name: String
+    let role: String
+    private let mainColor = Color(red: 0.04, green: 0.36, blue: 0.25)
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Image(systemName: icon)
-                .font(.title2)
-                .foregroundColor(color)
-                .padding(12)
-                .background(color.opacity(0.1))
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+        HStack(spacing: 16) {
+            ZStack {
+                Circle()
+                    .fill(mainColor.opacity(0.1))
+                    .frame(width: 60, height: 60)
+                
+                Image(systemName: "person.circle.fill")
+                    .font(.system(size: 40))
+                    .foregroundColor(mainColor)
+            }
             
-            Text(title)
-                .font(.headline)
-                .foregroundColor(.primary)
-            
-            Text(description)
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .lineLimit(2)
+            VStack(alignment: .leading, spacing: 6) {
+                Text(name)
+                    .font(.title2)
+                    .fontWeight(.bold)
+                
+                HStack(spacing: 6) {
+                    Circle()
+                        .fill(Color.green)
+                        .frame(width: 8, height: 8)
+                    
+                    Text(role)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+            }
             
             Spacer()
         }
-        .padding()
-        .frame(height: 160)
-        .frame(maxWidth: .infinity)
-        .background(Color(uiColor: .systemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 20))
-        .shadow(color: Color.black.opacity(0.05), radius: 10)
+        .padding(.horizontal)
     }
 }
 
-struct StatCard: View {
+struct DashboardCard: View {
+    let bagsCount: Int
+    let itemsCount: Int
+    private let mainColor = Color(red: 0.04, green: 0.36, blue: 0.25)
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Equipment Overview")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                    
+                    Text("Current status of your climbing gear")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+                
+                Spacer()
+                
+                Text("\(bagsCount + itemsCount)")
+                    .font(.system(size: 18, weight: .bold))
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
+                    .background(mainColor.opacity(0.1))
+                    .foregroundColor(mainColor)
+                    .clipShape(Capsule())
+            }
+            
+            HStack(spacing: 16) {
+                EnhancedStatCard(
+                    title: "Total Bags",
+                    value: bagsCount,
+                    icon: "duffle.bag",
+                    color: mainColor
+                )
+                
+                EnhancedStatCard(
+                    title: "Active Items",
+                    value: itemsCount,
+                    icon: "cube.box.fill",
+                    color: mainColor
+                )
+            }
+        }
+        .padding(24)
+        .background(
+            RoundedRectangle(cornerRadius: 24)
+                .fill(Color(uiColor: .systemBackground))
+                .shadow(color: Color.black.opacity(0.08), radius: 15, x: 0, y: 5)
+        )
+        .padding(.horizontal)
+    }
+}
+
+
+struct EnhancedStatCard: View {
     let title: String
     let value: Int
     let icon: String
@@ -210,30 +186,69 @@ struct StatCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Circle()
-                    .fill(color.opacity(0.1))
-                    .frame(width: 40, height: 40)
-                    .overlay(
-                        Image(systemName: icon)
-                            .foregroundColor(color)
-                    )
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("\(value)")
+                        .font(.system(size: 32, weight: .bold))
+                        .foregroundColor(.primary)
+                    
+                    Text(title)
+                        .font(.system(size: 14))
+                        .foregroundColor(.secondary)
+                }
+                
                 Spacer()
-                Image(systemName: "chevron.right")
-                    .foregroundColor(.secondary)
+                
+                ZStack {
+                    Circle()
+                        .fill(color.opacity(0.1))
+                        .frame(width: 48, height: 48)
+                    
+                    Image(systemName: icon)
+                        .font(.system(size: 24))
+                        .foregroundColor(color)
+                }
             }
+        }
+        .padding()
+        .frame(maxWidth: .infinity)
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(Color(uiColor: .systemBackground))
+                .shadow(color: color.opacity(0.1), radius: 10, x: 0, y: 4)
+        )
+    }
+}
+
+struct DecorativeImageView: View {
+    var body: some View {
+        VStack {
+            Image(systemName: "figure.climbing")
+                .font(.system(size: 120))
+                .foregroundStyle(
+                    LinearGradient(
+                        colors: [
+                            Color(red: 0.04, green: 0.36, blue: 0.25),
+                            Color(red: 0.04, green: 0.36, blue: 0.25).opacity(0.6)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .padding(40)
+                .background(
+                    Circle()
+                        .fill(Color(red: 0.04, green: 0.36, blue: 0.25).opacity(0.1))
+                )
             
-            Text(String(value))
+            Text("Safe Climbing")
                 .font(.title2)
-                .fontWeight(.bold)
+                .fontWeight(.semibold)
+                .foregroundColor(Color(red: 0.04, green: 0.36, blue: 0.25))
             
-            Text(title)
+            Text("Equipment Management System")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
         }
-        .padding()
-        .frame(width: 160)
-        .background(Color(uiColor: .systemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 20))
-        .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
+        .padding(.top, 20)
     }
 }

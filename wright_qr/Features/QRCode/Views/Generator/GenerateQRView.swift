@@ -8,86 +8,76 @@
 import SwiftUI
 
 struct GenerateQRView: View {
-    /// Toast Handler
     @State private var toasts: [Toast] = []
-    
-    // Color scheme
-    private let mainColor = Color(red: 0.04, green: 0.36, blue: 0.25)
     @State private var isLoading = false
     @State private var bags: [Bag] = []
     @State private var showAddBagForm = false
-    
+    private let mainColor = Color(red: 0.04, green: 0.36, blue: 0.25)
     let apiService = ApiService()
     
     var body: some View {
         ZStack {
-            // Background
-            Color(uiColor: .systemBackground)
-                .ignoresSafeArea()
+            // Fondo con gradiente sutil
+            LinearGradient(
+                colors: [
+                    Color(uiColor: .systemBackground),
+                    Color(uiColor: .systemBackground).opacity(0.95)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .ignoresSafeArea()
             
-            ZStack {
-                VStack(spacing: 24) {
-                    // Header Area
-                    VStack(spacing: 12) {
-                        Image(systemName: "figure.climbing")
-                            .font(.system(size: 60))
-                            .foregroundColor(mainColor)
-                        
-                        Text("All Climbing Gear Bags")
-                            .font(.system(size: 28, weight: .bold, design: .rounded))
-                            .foregroundColor(.primary)
-                        
-                        Text("Create and manage the bags")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                    }
+            VStack(spacing: 0) {
+                // Header mejorado
+                HeaderView()
                     .padding(.top, 20)
-                    
-                    // Bags List
+                
+                if bags.isEmpty {
+                    EmptyStateView()
+                } else {
+                    // Lista de bolsas mejorada
                     ScrollView {
                         LazyVStack(spacing: 16) {
                             ForEach(bags) { bag in
                                 NavigationLink(destination: BagDetailsView(bag: bag)) {
-                                    BagCard(bag: bag)
+                                    EnhancedBagCard(bag: bag)
                                 }
                             }
                         }
-                        .padding(.horizontal)
+                        .padding()
                     }
-                    
-                    // Add New Bag Button
-                    Button(action: {
-                        showAddBagForm = true
-                    }) {
-                        HStack {
-                            Image(systemName: "plus.circle.fill")
-                                .font(.title2)
-                            Text("Add New Bag")
-                                .fontWeight(.semibold)
-                        }
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 56)
-                        .background(mainColor)
-                        .clipShape(RoundedRectangle(cornerRadius: 16))
-                        .shadow(color: mainColor.opacity(0.3), radius: 5, x: 0, y: 2)
-                    }
-                    .padding(.horizontal)
-                    .padding(.bottom, 20)
                 }
+                
+                // Botón de acción mejorado
+                VStack(spacing: 12) {
+                    ActionButton(
+                        title: "Add New Bag",
+                        icon: "plus.circle.fill",
+                        color: mainColor
+                    ) {
+                        showAddBagForm = true
+                    }
+                }
+                .padding()
+                .background(
+                    Rectangle()
+                        .fill(Color(uiColor: .systemBackground))
+                        .shadow(color: Color.black.opacity(0.05), radius: 15, x: 0, y: -5)
+                )
             }
-            // Loading
+            
             if isLoading {
-                LoadingView(message: "Loading bags, the first time it might take a while", mainColor: mainColor)
+                LoadingView(
+                    message: "Loading bags, the first time it might take a while",
+                    mainColor: mainColor
+                )
             }
         }
         .sheet(isPresented: $showAddBagForm) {
             NewBagFormView(onSave: addBag)
         }
-        // onAppear loads when the view charge
-        .onAppear {
-            loadBags()
-        }
+        .onAppear { loadBags() }
         .interactiveToast($toasts)
     }
     
@@ -141,6 +131,125 @@ struct GenerateQRView: View {
             }
         } else {
             isLoading = false
+        }
+    }
+    
+    struct HeaderView: View {
+        private let mainColor = Color(red: 0.04, green: 0.36, blue: 0.25)
+        
+        var body: some View {
+            VStack(spacing: 16) {
+                Circle()
+                    .fill(mainColor.opacity(0.1))
+                    .frame(width: 80, height: 80)
+                    .overlay(
+                        Image(systemName: "figure.climbing")
+                            .font(.system(size: 36))
+                            .foregroundColor(mainColor)
+                    )
+                
+                Text("All Climbing Gear Bags")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                
+                Text("Create and manage your bags")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+            .padding(.bottom, 20)
+        }
+    }
+    
+    struct EmptyStateView: View {
+        var body: some View {
+            VStack(spacing: 16) {
+                Image(systemName: "duffle.bag")
+                    .font(.system(size: 50))
+                    .foregroundColor(.secondary)
+                
+                Text("No Bags Yet")
+                    .font(.title2)
+                    .fontWeight(.semibold)
+                
+                Text("Start by adding your first climbing gear bag")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+            .padding()
+            .frame(maxHeight: .infinity)
+        }
+    }
+    
+    struct EnhancedBagCard: View {
+        let bag: Bag
+        private let mainColor = Color(red: 0.04, green: 0.36, blue: 0.25)
+        
+        var body: some View {
+            HStack(spacing: 16) {
+                // Icono mejorado
+                ZStack {
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(mainColor.opacity(0.1))
+                        .frame(width: 56, height: 56)
+                    
+                    Image(systemName: "duffle.bag")
+                        .font(.system(size: 24))
+                        .foregroundColor(mainColor)
+                }
+                
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(bag.name)
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(.primary)
+                    
+                    HStack(spacing: 4) {
+                        Image(systemName: "info.circle")
+                            .font(.system(size: 12))
+                        Text("Tap to view details")
+                            .font(.system(size: 14))
+                    }
+                    .foregroundColor(.secondary)
+                }
+                
+                Spacer()
+                
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.secondary)
+            }
+            .padding()
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color(uiColor: .systemBackground))
+                    .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 4)
+            )
+        }
+    }
+    
+    struct ActionButton: View {
+        let title: String
+        let icon: String
+        let color: Color
+        let action: () -> Void
+        
+        var body: some View {
+            Button(action: action) {
+                HStack(spacing: 8) {
+                    Image(systemName: icon)
+                        .font(.system(size: 16, weight: .semibold))
+                    Text(title)
+                        .font(.system(size: 16, weight: .semibold))
+                }
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .frame(height: 54)
+                .background(
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(color)
+                        .shadow(color: color.opacity(0.3), radius: 8, x: 0, y: 4)
+                )
+            }
         }
     }
     

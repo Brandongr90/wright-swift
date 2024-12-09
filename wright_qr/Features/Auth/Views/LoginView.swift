@@ -18,6 +18,8 @@ struct LoginView: View {
     @State private var showAlert: Bool = false
     @State private var alertMessage: String = ""
     
+    @State private var showingSupportSheet = false
+    
     @FocusState private var focusedField: Field?
     
     enum Field {
@@ -73,12 +75,15 @@ struct LoginView: View {
                             HStack {
                                 Spacer()
                                 Button(action: {
-                                    // Forgot password logic
+                                    showingSupportSheet = true
                                 }) {
-                                    Text("Forgot Password?")
+                                    Text("Don't have an account?")
                                         .font(.footnote)
                                         .foregroundColor(mainColor)
                                 }
+                            }
+                            .sheet(isPresented: $showingSupportSheet) {
+                                SupportContactSheet()
                             }
                         }
                         .padding(.horizontal)
@@ -159,6 +164,120 @@ struct LoginView: View {
             alertMessage = "Server error: \(message)"
         }
         showAlert = true
+    }
+    
+    struct SupportContactSheet: View {
+        @Environment(\.dismiss) private var dismiss
+        private let mainColor = Color(red: 0.04, green: 0.36, blue: 0.25)
+        private let supportEmail = "techvisioncomp@gmail.com"
+        private let supportPhone = "+524151006711"
+        @State private var copiedText: String?
+        
+        var body: some View {
+            NavigationView {
+                VStack(spacing: 24) {
+                    VStack(spacing: 8) {
+                        Image(systemName: "person.fill.questionmark")
+                            .font(.system(size: 60))
+                            .foregroundColor(mainColor)
+                        
+                        Text("Need an Account?")
+                            .font(.title2)
+                            .fontWeight(.bold)
+                        
+                        Text("Contact us to set up your account")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
+                    .padding(.top)
+                    
+                    // Contact Options
+                    VStack(spacing: 16) {
+                        // iMessage Option
+                        ContactButton(
+                            title: "Send Message",
+                            icon: "message.fill",
+                            color: .green
+                        ) {
+                            openMessages()
+                        }
+                        
+                        // Email Option
+                        ContactButton(
+                            title: "Send Email",
+                            icon: "envelope.fill",
+                            color: .blue
+                        ) {
+                            openEmail()
+                        }
+                        
+                        // Copy Options
+                        VStack(spacing: 12) {
+                            // Copy Email
+                            CopyButton(
+                                text: supportEmail,
+                                icon: "envelope",
+                                label: "Copy Email"
+                            ) {
+                                copyToClipboard(supportEmail)
+                            }
+                            
+                            // Copy Phone
+                            CopyButton(
+                                text: supportPhone,
+                                icon: "phone",
+                                label: "Copy Phone"
+                            ) {
+                                copyToClipboard(supportPhone)
+                            }
+                        }
+                    }
+                    .padding(.horizontal)
+                    
+                    Spacer()
+                }
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button("Done") {
+                            dismiss()
+                        }
+                    }
+                }
+                .overlay {
+                    if let copiedText = copiedText {
+                        CopiedToast(text: copiedText)
+                            .transition(.move(edge: .bottom))
+                    }
+                }
+            }
+        }
+        
+        // Mantener las mismas funciones privadas...
+        private func openMessages() {
+            if let url = URL(string: "sms:\(supportPhone)") {
+                UIApplication.shared.open(url)
+            }
+        }
+        
+        private func openEmail() {
+            if let url = URL(string: "mailto:\(supportEmail)") {
+                UIApplication.shared.open(url)
+            }
+        }
+        
+        private func copyToClipboard(_ text: String) {
+            UIPasteboard.general.string = text
+            copiedText = text
+            
+            // Auto-dismiss after 2 seconds
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                withAnimation {
+                    copiedText = nil
+                }
+            }
+        }
     }
 }
 
