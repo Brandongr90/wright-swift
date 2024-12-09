@@ -18,6 +18,7 @@ struct ScanQRView: View {
     @State private var selectedItem: PhotosPickerItem?
     @State private var showError = false
     @State private var errorMessage = ""
+    @State private var isProcessingQR = false
     private let mainColor = Color(red: 0.04, green: 0.36, blue: 0.25)
     
     let apiService = ApiService()
@@ -97,7 +98,8 @@ struct ScanQRView: View {
                 }
             }
             .onChange(of: scannedCode) { oldValue, newValue in
-                if let code = newValue {
+                if let code = newValue, !isProcessingQR {
+                    isProcessingQR = true
                     loadBag(withId: code)
                 }
             }
@@ -112,7 +114,9 @@ struct ScanQRView: View {
                 }
             }
             .alert("Error", isPresented: $showError) {
-                Button("OK", role: .cancel) {}
+                Button("OK", role: .cancel) {
+                    isProcessingQR = false
+                }
             } message: {
                 Text(errorMessage)
             }
@@ -155,10 +159,16 @@ struct ScanQRView: View {
             case .success(let bag):
                 self.scannedBag = bag
                 self.showBagDetails = true
+                // Reseteamos isProcessingQR cuando naveguemos a la nueva vista
+                self.isProcessingQR = false
             case .failure(_):
                 self.showError = true
                 self.errorMessage = "Bag not found. Please try scanning a valid QR code."
-                self.scannedCode = nil  // Reset scanner
+                self.scannedCode = nil
+                // Importante: Agregamos esto para que se pueda volver a escanear después de cerrar la alerta
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    self.isProcessingQR = false
+                }
             }
         }
     }
