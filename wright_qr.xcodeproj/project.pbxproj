@@ -249,6 +249,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "wright-qr-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "Gear Management";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSCameraUsageDescription = "wright_qr wants to use your camera";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "wright_qr needs permission to access your library";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -282,6 +283,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "wright-qr-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "Gear Management";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSCameraUsageDescription = "wright_qr wants to use your camera";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "wright_qr needs permission to access your library";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
