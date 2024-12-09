@@ -16,7 +16,10 @@ struct BagDetailsView: View {
     @State private var qrImage: UIImage? = nil
     @State private var showQRPreview = false
     @State private var isGeneratingQR = false
+    @State private var showDeleteAlert = false
     @Environment(\.colorScheme) var colorScheme
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.presentationMode) var presentationMode
     let apiService = ApiService()
     
     private let mainColor = Color(red: 0.04, green: 0.36, blue: 0.25)
@@ -87,6 +90,14 @@ struct BagDetailsView: View {
                     ) {
                         generateQR()
                     }
+                    
+                    ActionButton(
+                        title: "Delete Bag",
+                        icon: "trash.fill",
+                        color: .red
+                    ) {
+                        showDeleteAlert = true
+                    }
                 }
                 .padding()
                 .background(
@@ -103,6 +114,14 @@ struct BagDetailsView: View {
             if isGeneratingQR {
                 LoadingView(message: "Generating QR Code...", mainColor: mainColor)
             }
+        }
+        .alert("Delete Bag", isPresented: $showDeleteAlert) {
+            Button("Cancel", role: .cancel) {}
+            Button("Delete", role: .destructive) {
+                deleteBag()
+            }
+        } message: {
+            Text("Are you sure you want to delete this bag? All items in this bag will be deleted. This action cannot be undone.")
         }
         .sheet(isPresented: $showQRPreview) {
             if let qrImage = qrImage {
@@ -153,6 +172,29 @@ struct BagDetailsView: View {
                         self.showQRPreview = true
                     }
                 }
+            }
+        }
+    }
+    
+    func deleteBag() {
+        isLoading = true
+        apiService.delete(bag.id, direction: "bags") { success in
+            
+            if success {
+                DispatchQueue.main.async {
+                    isLoading = false
+                    // Navegar a GenerateQRView
+                    if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                       let window = windowScene.windows.first {
+                        window.rootViewController = UIHostingController(rootView:
+                                                                            NavigationView {
+                            MainTabView()
+                        }
+                        )
+                    }
+                }
+            } else {
+                print("Error")
             }
         }
     }
@@ -227,7 +269,7 @@ struct ModernItemCard: View {
                                         item.conditionO.lowercased() == "used" ? Color.orange.opacity(0.2) : Color.gray.opacity(0.2))
                         )
                         .foregroundColor(item.conditionO.lowercased() == "new" ? .green :
-                                        item.conditionO.lowercased() == "used" ? .orange : .gray)
+                                            item.conditionO.lowercased() == "used" ? .orange : .gray)
                 }
             }
             

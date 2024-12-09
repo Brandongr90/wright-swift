@@ -171,18 +171,36 @@ class ApiService {
         }.resume()
     }
     
-    func getItemById(_ id: Int, completion: @escaping (Item?) -> Void) {
-        let urlString = "\(baseUrl)/items/\(id)"
+    // Delete Items and Bags
+    func delete(_ id: String, direction: String, completion: @escaping (Bool) -> Void) {
+        guard let url = URL(string: "\(baseUrl)/\(direction)/\(id)") else {
+            completion(false)
+            return
+        }
         
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
+        
+        URLSession.shared.dataTask(with: request) { _, response, error in
+            DispatchQueue.main.async {
+                if let httpResponse = response as? HTTPURLResponse {
+                    completion(httpResponse.statusCode == 200)
+                } else {
+                    completion(false)
+                }
+            }
+        }.resume()
+    }
+    
+    // Get Item By Id
+    func getItemById(_ id: Int, completion: @escaping (Item?) -> Void) {
         guard let url = URL(string: "\(baseUrl)/items/\(id)") else {
             completion(nil)
             return
         }
-        
-        print("Iniciando petición GET para item: \(id)")
         URLSession.shared.dataTask(with: url) { data, response, error in
             DispatchQueue.main.async {
-                if let error = error {
+                if error != nil {
                     completion(nil)
                     return
                 }
