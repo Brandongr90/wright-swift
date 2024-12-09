@@ -33,10 +33,20 @@ struct GenerateQRView: View {
                 HeaderView()
                     .padding(.top, 20)
                 
-                if bags.isEmpty {
+                if isLoading {
+                    // Mostrar skeleton cards mientras se carga
+                    ScrollView {
+                        LazyVStack(spacing: 16) {
+                            ForEach(0..<3, id: \.self) { _ in
+                                SkeletonBagCard()
+                            }
+                        }
+                        .padding()
+                    }
+                } else if bags.isEmpty {
                     EmptyStateView()
                 } else {
-                    // Lista de bolsas mejorada
+                    // Tu lista normal de bags
                     ScrollView {
                         LazyVStack(spacing: 16) {
                             ForEach(bags) { bag in
@@ -67,12 +77,12 @@ struct GenerateQRView: View {
                 )
             }
             
-            if isLoading {
-                LoadingView(
-                    message: "Loading bags, the first time it might take a while",
-                    mainColor: mainColor
-                )
-            }
+//            if isLoading {
+//                LoadingView(
+//                    message: "Loading bags, the first time it might take a while",
+//                    mainColor: mainColor
+//                )
+//            }
         }
         .sheet(isPresented: $showAddBagForm) {
             NewBagFormView(onSave: addBag)
@@ -352,5 +362,70 @@ struct BagCard: View {
         .background(Color(uiColor: .systemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
+    }
+}
+
+struct SkeletonEffect: ViewModifier {
+    @State private var phase: CGFloat = 0
+    
+    func body(content: Content) -> some View {
+        content
+            .mask(
+                LinearGradient(
+                    stops: [
+                        .init(color: .clear, location: phase - 0.2),
+                        .init(color: .white, location: phase),
+                        .init(color: .clear, location: phase + 0.2)
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
+            .onAppear {
+                withAnimation(.linear(duration: 1.5).repeatForever(autoreverses: false)) {
+                    phase = 1
+                }
+            }
+    }
+}
+
+struct SkeletonBagCard: View {
+    @Environment(\.colorScheme) var colorScheme
+    
+    var body: some View {
+        HStack(spacing: 16) {
+            // Icono skeleton
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color.gray.opacity(0.2))
+                .frame(width: 56, height: 56)
+            
+            VStack(alignment: .leading, spacing: 6) {
+                // Título skeleton
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color.gray.opacity(0.2))
+                    .frame(height: 20)
+                    .frame(width: 120)
+                
+                // Subtítulo skeleton
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color.gray.opacity(0.2))
+                    .frame(height: 16)
+                    .frame(width: 100)
+            }
+            
+            Spacer()
+            
+            // Flecha skeleton
+            RoundedRectangle(cornerRadius: 4)
+                .fill(Color.gray.opacity(0.2))
+                .frame(width: 8, height: 16)
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color(uiColor: .systemBackground))
+                .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 4)
+        )
+        .modifier(SkeletonEffect())
     }
 }
