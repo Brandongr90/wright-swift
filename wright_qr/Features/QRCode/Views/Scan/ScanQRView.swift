@@ -150,9 +150,16 @@ struct ScanQRView: View {
     }
     
     private func loadBag(withId id: String) {
-        if let userId = userManager.currentUser?.id {
-            scannedBag = Bag(id: id, name: "Scanned Bag", userId: userId)
-            showBagDetails = true
+        apiService.getBagWithItems(bagId: id) { result in
+            switch result {
+            case .success(let bag):
+                self.scannedBag = bag
+                self.showBagDetails = true
+            case .failure(_):
+                self.showError = true
+                self.errorMessage = "Bag not found. Please try scanning a valid QR code."
+                self.scannedCode = nil  // Reset scanner
+            }
         }
     }
 }

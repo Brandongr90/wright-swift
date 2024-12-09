@@ -217,4 +217,54 @@ class ApiService {
             }
         }.resume()
     }
+    
+    // Bag With Items al escanear
+    func getBagWithItems(bagId: String, completion: @escaping (Result<Bag, Error>) -> Void) {
+        let urlString = "\(baseUrl)/bag_with_items/\(bagId)"
+        guard let url = URL(string: urlString) else {
+            completion(.failure(APIError.invalidURL))
+            return
+        }
+        
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            if let error = error {
+                DispatchQueue.main.async {
+                    completion(.failure(error))
+                }
+                return
+            }
+            
+            guard let httpResponse = response as? HTTPURLResponse else {
+                DispatchQueue.main.async {
+                    completion(.failure(APIError.invalidResponse))
+                }
+                return
+            }
+            
+            if httpResponse.statusCode == 404 {
+                DispatchQueue.main.async {
+                    completion(.failure(APIError.networkError))
+                }
+                return
+            }
+            
+            guard let data = data else {
+                DispatchQueue.main.async {
+                    completion(.failure(APIError.networkError))
+                }
+                return
+            }
+            
+            do {
+                let bag = try JSONDecoder().decode(Bag.self, from: data)
+                DispatchQueue.main.async {
+                    completion(.success(bag))
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    completion(.failure(APIError.decodingError))
+                }
+            }
+        }.resume()
+    }
 }
