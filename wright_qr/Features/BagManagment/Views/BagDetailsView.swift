@@ -26,46 +26,53 @@ struct BagDetailsView: View {
     
     var body: some View {
         ZStack {
-            Color(uiColor: .systemBackground)
-                .ignoresSafeArea()
-            
+            LinearGradient(
+                colors: [
+                    Color(uiColor: .systemBackground),
+                    Color(uiColor: .systemBackground).opacity(0.95)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .ignoresSafeArea()
             VStack(spacing: 0) {
                 // Header Stats
-                HStack(spacing: 20) {
-                    StatisticView(
-                        title: "Total Items",
-                        value: "\(items.count)",
-                        icon: "cube.box.fill",
-                        color: mainColor
-                    )
-                    
-                    StatisticView(
-                        title: "New Items",
-                        value: "\(items.filter { $0.conditionO.lowercased() == "new" }.count)",
-                        icon: "sparkles",
-                        color: .green
-                    )
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 16) {
+                        StatisticCard(
+                            title: "Total Items",
+                            value: "\(items.count)",
+                            icon: "cube.box.fill",
+                            color: mainColor
+                        )
+                        
+                        StatisticCard(
+                            title: "New Items",
+                            value: "\(items.filter { $0.conditionO.lowercased() == "new" }.count)",
+                            icon: "sparkles",
+                            color: .green
+                        )
+                        
+                        StatisticCard(
+                            title: "Used Items",
+                            value: "\(items.filter { $0.conditionO.lowercased() == "used" }.count)",
+                            icon: "archivebox",
+                            color: .orange
+                        )
+                    }
+                    .padding(.horizontal)
                 }
-                .padding()
+                .scrollClipDisabled()
                 
                 if items.isEmpty {
-                    VStack {
-                        Spacer()
-                        ContentUnavailableView(
-                            "No Items Yet",
-                            systemImage: "cube.box",
-                            description: Text("Start by adding your first item to this bag")
-                        )
-                        .offset(y: -50)
-                        Spacer()
-                    }
+                    EmptyStateView()
                 } else {
-                    // Items List
+                    // Lista de items mejorada
                     ScrollView {
-                        LazyVStack(spacing: 16) {
+                        LazyVStack(spacing: 12) {
                             ForEach(items) { item in
                                 NavigationLink(destination: ItemDetailsView(item: item)) {
-                                    ModernItemCard(item: item, mainColor: mainColor)
+                                    EnhancedItemCard(item: item, mainColor: mainColor)
                                 }
                             }
                         }
@@ -73,37 +80,40 @@ struct BagDetailsView: View {
                     }
                 }
                 
+                Spacer()
+                
                 // Bottom Action Buttons
                 VStack(spacing: 12) {
-                    ActionButton(
+                    EnhancedActionButton(
                         title: "Add New Item",
                         icon: "plus.circle.fill",
-                        color: mainColor
-                    ) {
-                        showAddItemForm = true
-                    }
+                        color: mainColor,
+                        action: { showAddItemForm = true }
+                    )
                     
-                    ActionButton(
-                        title: "Generate QR Code",
-                        icon: "qrcode",
-                        color: mainColor
-                    ) {
-                        generateQR()
-                    }
-                    
-                    ActionButton(
-                        title: "Delete Bag",
-                        icon: "trash.fill",
-                        color: .red
-                    ) {
-                        showDeleteAlert = true
+                    HStack(spacing: 12) {
+                        EnhancedActionButton(
+                            title: "QR Code",
+                            icon: "qrcode",
+                            color: mainColor,
+                            isSecondary: true,
+                            action: generateQR
+                        )
+                        
+                        EnhancedActionButton(
+                            title: "Delete",
+                            icon: "trash.fill",
+                            color: .red,
+                            isSecondary: true,
+                            action: { showDeleteAlert = true }
+                        )
                     }
                 }
                 .padding()
                 .background(
-                    Rectangle()
+                    RoundedRectangle(cornerRadius: 24)
                         .fill(Color(uiColor: .systemBackground))
-                        .shadow(color: Color.black.opacity(0.05), radius: 15, x: 0, y: -5)
+                        .shadow(color: Color.black.opacity(0.05), radius: 20, x: 0, y: -5)
                 )
             }
             
@@ -201,30 +211,38 @@ struct BagDetailsView: View {
 }
 
 // New Components
-struct StatisticView: View {
+struct StatisticCard: View {
     let title: String
     let value: String
     let icon: String
     let color: Color
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 8) {
                 Image(systemName: icon)
+                    .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(color)
                 Text(title)
+                    .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.secondary)
-                    .font(.subheadline)
             }
             
             Text(value)
-                .font(.title2)
-                .fontWeight(.bold)
+                .font(.system(size: 28, weight: .bold))
+                .foregroundColor(.primary)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(width: 160)
         .padding()
-        .background(color.opacity(0.1))
-        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(Color(uiColor: .systemBackground))
+                .shadow(color: color.opacity(0.1), radius: 10, x: 0, y: 5)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 20)
+                .stroke(color.opacity(0.1), lineWidth: 1)
+        )
     }
 }
 
@@ -281,6 +299,133 @@ struct ModernItemCard: View {
         .background(Color(uiColor: .systemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 2)
+    }
+}
+
+struct EnhancedItemCard: View {
+    let item: Item
+    let mainColor: Color
+    @Environment(\.colorScheme) var colorScheme
+    
+    var body: some View {
+        HStack(spacing: 16) {
+            // Icono mejorado
+            ZStack {
+                Circle()
+                    .fill(mainColor.opacity(0.1))
+                    .frame(width: 56, height: 56)
+                Image(systemName: "cube.box.fill")
+                    .font(.system(size: 24))
+                    .foregroundColor(mainColor)
+            }
+            
+            VStack(alignment: .leading, spacing: 8) {
+                Text(item.itemDescription)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(.primary)
+                
+                HStack(spacing: 12) {
+                    Label(
+                        item.brand.isEmpty ? "N/A" : item.brand,
+                        systemImage: "tag.fill"
+                    )
+                    .font(.system(size: 14))
+                    .foregroundColor(.secondary)
+                    
+                    Spacer()
+                    
+                    ConditionBadge(condition: item.conditionO)
+                }
+            }
+            
+            Spacer()
+            
+            Image(systemName: "chevron.right")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(.secondary)
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color(uiColor: .systemBackground))
+                .shadow(
+                    color: Color.black.opacity(colorScheme == .dark ? 0.3 : 0.06),
+                    radius: 8,
+                    x: 0,
+                    y: 4
+                )
+        )
+    }
+}
+
+struct ConditionBadge: View {
+    let condition: String
+    
+    private var conditionColor: Color {
+        switch condition.lowercased() {
+        case "new": return .green
+        case "used": return .orange
+        default: return .gray
+        }
+    }
+    
+    var body: some View {
+        Text(condition.isEmpty ? "N/A" : condition)
+            .font(.system(size: 12, weight: .semibold))
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
+            .background(
+                Capsule()
+                    .fill(conditionColor.opacity(0.15))
+            )
+            .foregroundColor(conditionColor)
+    }
+}
+
+struct EnhancedActionButton: View {
+    let title: String
+    let icon: String
+    let color: Color
+    var isSecondary: Bool = false
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                Image(systemName: icon)
+                    .font(.system(size: 16, weight: .semibold))
+                Text(title)
+                    .font(.system(size: 16, weight: .semibold))
+            }
+            .foregroundColor(isSecondary ? color : .white)
+            .frame(maxWidth: .infinity)
+            .frame(height: 50)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(isSecondary ? color.opacity(0.15) : color)
+            )
+        }
+    }
+}
+
+struct EmptyStateView: View {
+    var body: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "cube.box")
+                .font(.system(size: 50))
+                .foregroundColor(.secondary)
+            
+            Text("No Items Yet")
+                .font(.title2)
+                .fontWeight(.semibold)
+            
+            Text("Start by adding your first item to this bag")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+        }
+        .padding()
+        .frame(maxHeight: .infinity)
     }
 }
 

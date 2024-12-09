@@ -8,10 +8,12 @@
 import SwiftUI
 
 struct ItemDetailsView: View {
+    @Environment(\.dismiss) private var dismiss
     @State private var item: Item
     @State private var showingEditForm = false
     @State private var isLoading = false
     @State private var shouldRefresh = false
+    @State private var showDeleteAlert = false
     private let mainColor = Color(red: 0.04, green: 0.36, blue: 0.25)
     let apiService = ApiService()
     
@@ -49,131 +51,93 @@ struct ItemDetailsView: View {
                     .ignoresSafeArea()
                 
                 ScrollView {
-                    VStack(spacing: 32) {
-                        // Header
-                        VStack(spacing: 12) {
-                            Image(systemName: "doc.text.fill")
-                                .font(.system(size: 60))
-                                .foregroundColor(mainColor)
-                            
-                            Text("Item Details")
-                                .font(.system(size: 28, weight: .bold, design: .rounded))
-                                .foregroundColor(.primary)
-                            
-                            Text(item.itemDescription)
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                        }
-                        .padding(.top, 20)
+                    VStack(spacing: 24) {
+                        // Header mejorado
+                        HeaderView(description: item.itemDescription)
                         
-                        // Details Sections
-                        VStack(spacing: 24) {
-                            // Item Information Section
-                            FormSection(title: "Item Information") {
-                                DetailRow(
-                                    icon: "text.alignleft",
-                                    title: "Description",
-                                    value: item.itemDescription.isEmpty ? "N/A" : item.itemDescription,
-                                    iconColor: mainColor
-                                )
-                                DetailRow(
-                                    icon: "tag",
-                                    title: "Model Name",
-                                    value: item.modelName.isEmpty ? "N/A" : item.modelName,
-                                    iconColor: mainColor
-                                )
-                                DetailRow(
-                                    icon: "building.2",
-                                    title: "Brand",
-                                    value: item.brand.isEmpty ? "N/A" : item.brand,
-                                    iconColor: mainColor
-                                )
-                                DetailRow(
-                                    icon: "text.bubble",
-                                    title: "Comment",
-                                    value: item.comment.isEmpty ? "N/A" : item.comment,
-                                    iconColor: mainColor
-                                )
-                            }
+                        // Secciones de detalles mejoradas
+                        VStack(spacing: 20) {
+                            // Información del Item
+                            DetailSection(
+                                title: "Item Information",
+                                icon: "doc.text.fill",
+                                items: [
+                                    DetailItem(icon: "text.alignleft", title: "Description", value: item.itemDescription),
+                                    DetailItem(icon: "tag", title: "Model Name", value: item.modelName),
+                                    DetailItem(icon: "building.2", title: "Brand", value: item.brand),
+                                    DetailItem(icon: "text.bubble", title: "Comment", value: item.comment)
+                                ]
+                            )
                             
-                            // Specifications Section
-                            FormSection(title: "Specifications") {
-                                DetailRow(
-                                    icon: "number",
-                                    title: "Serial Number",
-                                    value: item.serialNumber.isEmpty ? "N/A" : item.serialNumber,
-                                    iconColor: mainColor
-                                )
-                                DetailRow(
-                                    icon: "sparkles",
-                                    title: "Condition",
-                                    value: item.conditionO.isEmpty ? "N/A" : item.conditionO,
-                                    iconColor: mainColor
-                                )
-                                DetailRow(
-                                    icon: "checkmark.seal",
-                                    title: "Inspection Status",
-                                    value: item.inspection == 1 ? "Passed" : "Failed",
-                                    iconColor: mainColor
-                                )
-                            }
+                            // Especificaciones
+                            DetailSection(
+                                title: "Specifications",
+                                icon: "gearshape.fill",
+                                items: [
+                                    DetailItem(icon: "number", title: "Serial Number", value: item.serialNumber),
+                                    DetailItem(icon: "sparkles", title: "Condition", value: item.conditionO),
+                                    DetailItem(icon: "checkmark.seal", title: "Inspection Status", value: item.inspection == 1 ? "Passed" : "Failed")
+                                ]
+                            )
                             
-                            // Inspection Details Section
-                            FormSection(title: "Inspection Details") {
-                                DetailRow(
-                                    icon: "person.fill",
-                                    title: "Inspector Name",
-                                    value: item.inspectorName.isEmpty ? "N/A" : item.inspectorName,
-                                    iconColor: mainColor
-                                )
-                                DetailRow(
-                                    icon: "calendar",
-                                    title: "Inspection Date",
-                                    value: formatDate(item.inspectionDate),
-                                    iconColor: mainColor
-                                )
-                                DetailRow(
-                                    icon: "calendar.badge.clock",
-                                    title: "Follow-up Inspection",
-                                    value: formatDate(item.inspectionDate1),
-                                    iconColor: mainColor
-                                )
-                                DetailRow(
-                                    icon: "calendar.badge.exclamationmark",
-                                    title: "Expiration Date",
-                                    value: formatDate(item.expirationDate),
-                                    iconColor: mainColor
-                                )
-                            }
+                            // Detalles de inspección
+                            DetailSection(
+                                title: "Inspection Details",
+                                icon: "clipboard.fill",
+                                items: [
+                                    DetailItem(icon: "person.fill", title: "Inspector", value: item.inspectorName),
+                                    DetailItem(icon: "calendar", title: "Inspection Date", value: formatDate(item.inspectionDate)),
+                                    DetailItem(icon: "calendar.badge.clock", title: "Follow-up", value: formatDate(item.inspectionDate1)),
+                                    DetailItem(icon: "calendar.badge.exclamationmark", title: "Expiration", value: formatDate(item.expirationDate))
+                                ]
+                            )
                             
-                            // Additional Information
-                            FormSection(title: "Additional Info") {
-                                DetailRow(
-                                    icon: "bag",
-                                    title: "Bag ID",
-                                    value: item.bagID.isEmpty ? "N/A" : item.bagID,
-                                    iconColor: mainColor
-                                )
-                            }
+                            // Información adicional
+                            DetailSection(
+                                title: "Additional Info",
+                                icon: "info.circle.fill",
+                                items: [
+                                    DetailItem(icon: "bag", title: "Bag ID", value: item.bagID)
+                                ]
+                            )
                         }
                         .padding(.horizontal)
+                        
+                        // Botones de acción
+                        VStack(spacing: 12) {
+                            ActionButtonn(
+                                title: "Edit Item",
+                                icon: "square.and.pencil",
+                                color: mainColor
+                            ) {
+                                showingEditForm = true
+                            }
+                            
+                            ActionButtonn(
+                                title: "Delete Item",
+                                icon: "trash.fill",
+                                color: .red
+                            ) {
+                                showDeleteAlert = true
+                            }
+                        }
+                        .padding()
                     }
                 }
+                
                 if isLoading {
                     LoadingView(message: "Updating item...", mainColor: mainColor)
                 }
             }
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: {
-                        showingEditForm = true
-                    }) {
-                        Image(systemName: "square.and.pencil")
-                            .foregroundColor(mainColor)
-                    }
+            .alert("Delete Item", isPresented: $showDeleteAlert) {
+                Button("Cancel", role: .cancel) { }
+                Button("Delete", role: .destructive) {
+                    deleteItem()
                 }
+            } message: {
+                Text("Are you sure you want to delete this item? This action cannot be undone.")
             }
+            .navigationBarTitleDisplayMode(.inline)
             .sheet(isPresented: $showingEditForm) {
                 EditItemFormView(item: item) { updatedItem in
                     self.shouldRefresh = true
@@ -182,14 +146,26 @@ struct ItemDetailsView: View {
             }
             .onChange(of: shouldRefresh) { oldValue, newValue in
                 if newValue {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                        loadItemDetails(itemId: item.id)
-                        shouldRefresh = false
-                    }
+                    loadItemDetails(itemId: item.id)
+                    shouldRefresh = false
                 }
             }
         }
     }
+    
+    private func deleteItem() {
+        isLoading = true
+        apiService.delete(String(item.id), direction: "items") { success in
+            DispatchQueue.main.async {
+                isLoading = false
+                if success {
+                    dismiss()
+                }
+            }
+        }
+    }
+    
+    
     
     private func loadItemDetails(itemId: Int) {
         print("Iniciando carga de detalles para item: \(itemId)") // Debug
@@ -204,6 +180,115 @@ struct ItemDetailsView: View {
                 print("No se recibió item actualizado") // Debug
             }
             self.isLoading = false
+        }
+    }
+}
+
+struct HeaderView: View {
+    let description: String
+    private let mainColor = Color(red: 0.04, green: 0.36, blue: 0.25)
+    
+    var body: some View {
+        VStack(spacing: 16) {
+            Circle()
+                .fill(mainColor.opacity(0.1))
+                .frame(width: 80, height: 80)
+                .overlay(
+                    Image(systemName: "figure.climbing.circle")
+                        .font(.system(size: 36))
+                        .foregroundColor(mainColor)
+                )
+            
+            Text(description)
+                .font(.largeTitle)
+                .fontWeight(.bold)
+                .multilineTextAlignment(.center)
+        }
+        .padding()
+    }
+}
+
+struct DetailSection: View {
+    let title: String
+    let icon: String
+    let items: [DetailItem]
+    private let mainColor = Color(red: 0.04, green: 0.36, blue: 0.25)
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(spacing: 8) {
+                Image(systemName: icon)
+                    .foregroundColor(mainColor)
+                Text(title)
+                    .font(.headline)
+            }
+            
+            VStack(spacing: 12) {
+                ForEach(items, id: \.title) { item in
+                    EnhancedDetailRow(item: item)
+                }
+            }
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color(uiColor: .secondarySystemBackground))
+        )
+    }
+}
+
+struct DetailItem {
+    let icon: String
+    let title: String
+    let value: String
+}
+
+struct EnhancedDetailRow: View {
+    let item: DetailItem
+    private let mainColor = Color(red: 0.04, green: 0.36, blue: 0.25)
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: item.icon)
+                .foregroundColor(mainColor)
+                .frame(width: 24)
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text(item.title)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                
+                Text(item.value.isEmpty ? "N/A" : item.value)
+                    .font(.body)
+                    .foregroundColor(.primary)
+            }
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(uiColor: .systemBackground))
+        .cornerRadius(12)
+    }
+}
+
+struct ActionButtonn: View {
+    let title: String
+    let icon: String
+    let color: Color
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            HStack {
+                Image(systemName: icon)
+                    .font(.headline)
+                Text(title)
+                    .fontWeight(.semibold)
+            }
+            .foregroundColor(.white)
+            .frame(maxWidth: .infinity)
+            .frame(height: 54)
+            .background(color)
+            .clipShape(RoundedRectangle(cornerRadius: 16))
         }
     }
 }
