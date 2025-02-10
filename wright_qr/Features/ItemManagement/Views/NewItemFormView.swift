@@ -13,7 +13,6 @@ struct NewItemFormView: View {
     @Environment(\.dismiss) private var dismiss
     private let mainColor = Color(red: 0.04, green: 0.36, blue: 0.25)
     
-    // Form Fields
     @State private var itemDescription: String = ""
     @State private var modelName: String = ""
     @State private var brand: String = ""
@@ -26,7 +25,6 @@ struct NewItemFormView: View {
     @State private var inspectionDate1: Date = Date()
     @State private var expirationDate: Date = Date()
     
-    // Focus States
     @FocusState private var focusedField: Field?
     
     var bag: Bag
@@ -51,7 +49,6 @@ struct NewItemFormView: View {
                 
                 ScrollView {
                     VStack(spacing: 32) {
-                        // Header
                         VStack(spacing: 12) {
                             Image(systemName: "figure.climbing")
                                 .font(.system(size: 60))
@@ -67,9 +64,7 @@ struct NewItemFormView: View {
                         }
                         .padding(.top, 20)
                         
-                        // Form Sections
                         VStack(spacing: 24) {
-                            // Item Details Section
                             FormSection(title: "Item Details") {
                                 CustomTextField(
                                     title: "Item Name",
@@ -104,7 +99,6 @@ struct NewItemFormView: View {
                                 .focused($focusedField, equals: .comment)
                             }
                             
-                            // Specifications Section
                             FormSection(title: "Specifications") {
                                 CustomTextField(
                                     title: "Serial Number",
@@ -122,11 +116,9 @@ struct NewItemFormView: View {
                                 )
                                 .focused($focusedField, equals: .condition)
                                 
-                                // Custom Stepper
                                 InspectionStatusSelector(status: $inspection, mainColor: mainColor)
                             }
-                            
-                            // Inspection Details Section
+                                                
                             FormSection(title: "Inspection Details") {
                                 CustomTextField(
                                     title: "Inspector Name",
@@ -156,8 +148,7 @@ struct NewItemFormView: View {
                             }
                         }
                         .padding(.horizontal)
-                        
-                        // Save Button
+                                                
                         VStack(spacing: 16) {
                             Button(action: addItem) {
                                 HStack {
@@ -214,7 +205,6 @@ struct NewItemFormView: View {
                         SuccessToastView(id)
                     }
                     self.toasts.append(toast)
-                    // Auto dismiss after 5 seconds
                     DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
                         if let index = self.toasts.firstIndex(where: { $0.id == toast.id }) {
                             withAnimation(.bouncy) {
@@ -236,7 +226,6 @@ struct NewItemFormView: View {
         }
     }
     
-    // CUSTOM TOASTS
     @ViewBuilder
     func SuccessToastView(_ id: String) -> some View {
         HStack(spacing: 12) {
@@ -300,7 +289,6 @@ struct NewItemFormView: View {
     }
 }
 
-// Helper Views
 struct FormSection<Content: View>: View {
     let title: String
     let content: Content

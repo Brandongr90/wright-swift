@@ -111,7 +111,6 @@ struct SupportContactSheet: View {
     var body: some View {
         NavigationView {
             VStack(spacing: 24) {
-                // Header
                 VStack(spacing: 8) {
                     Image(systemName: "headset.circle.fill")
                         .font(.system(size: 60))
@@ -127,9 +126,7 @@ struct SupportContactSheet: View {
                 }
                 .padding(.top)
                 
-                // Contact Options
                 VStack(spacing: 16) {
-                    // iMessage Option
                     ContactButton(
                         title: "Send Message",
                         icon: "message.fill",
@@ -138,7 +135,6 @@ struct SupportContactSheet: View {
                         openMessages()
                     }
                     
-                    // Email Option
                     ContactButton(
                         title: "Send Email",
                         icon: "envelope.fill",
@@ -147,9 +143,7 @@ struct SupportContactSheet: View {
                         openEmail()
                     }
                     
-                    // Copy Options
                     VStack(spacing: 12) {
-                        // Copy Email
                         CopyButton(
                             text: supportEmail,
                             icon: "envelope",
@@ -158,7 +152,6 @@ struct SupportContactSheet: View {
                             copyToClipboard(supportEmail)
                         }
                         
-                        // Copy Phone
                         CopyButton(
                             text: supportPhone,
                             icon: "phone",
@@ -208,7 +201,6 @@ struct SupportContactSheet: View {
             showCopiedAlert = true
         }
         
-        // Auto-dismiss the toast after 2 seconds
         DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
             withAnimation {
                 copiedText = nil
@@ -329,7 +321,6 @@ struct DisabledMenuRow: View {
     }
 }
 
-// Helper Views
 struct SectionContainer<Content: View>: View {
     let title: String
     let content: Content

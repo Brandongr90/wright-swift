@@ -34,7 +34,6 @@ struct LoginView: View {
                 
                 ScrollView {
                     VStack(spacing: 32) {
-                        // Header
                         VStack(spacing: 12) {
                             Image("icontv")
                                 .resizable()
@@ -51,7 +50,6 @@ struct LoginView: View {
                         }
                         .padding(.top, 40)
                         
-                        // Login Form
                         VStack(spacing: 24) {
                             CustomTextFielda(
                                 title: "Email Address",
@@ -88,7 +86,6 @@ struct LoginView: View {
                         }
                         .padding(.horizontal)
                         
-                        // Login Button
                         VStack(spacing: 16) {
                             Button(action: handleLogin) {
                                 HStack {
@@ -141,7 +138,6 @@ struct LoginView: View {
             isLoading = false
             switch result {
             case .success(let user):
-                // Save the user locally
                 UserManager.shared.saveUser(user)
                 navigateToHome = true
             case .failure(let error):
@@ -192,9 +188,7 @@ struct LoginView: View {
                     }
                     .padding(.top)
                     
-                    // Contact Options
                     VStack(spacing: 16) {
-                        // iMessage Option
                         ContactButton(
                             title: "Send Message",
                             icon: "message.fill",
@@ -203,7 +197,6 @@ struct LoginView: View {
                             openMessages()
                         }
                         
-                        // Email Option
                         ContactButton(
                             title: "Send Email",
                             icon: "envelope.fill",
@@ -212,9 +205,7 @@ struct LoginView: View {
                             openEmail()
                         }
                         
-                        // Copy Options
                         VStack(spacing: 12) {
-                            // Copy Email
                             CopyButton(
                                 text: supportEmail,
                                 icon: "envelope",
@@ -223,7 +214,6 @@ struct LoginView: View {
                                 copyToClipboard(supportEmail)
                             }
                             
-                            // Copy Phone
                             CopyButton(
                                 text: supportPhone,
                                 icon: "phone",
@@ -254,7 +244,6 @@ struct LoginView: View {
             }
         }
         
-        // Mantener las mismas funciones privadas...
         private func openMessages() {
             if let url = URL(string: "sms:\(supportPhone)") {
                 UIApplication.shared.open(url)
@@ -270,8 +259,6 @@ struct LoginView: View {
         private func copyToClipboard(_ text: String) {
             UIPasteboard.general.string = text
             copiedText = text
-            
-            // Auto-dismiss after 2 seconds
             DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                 withAnimation {
                     copiedText = nil

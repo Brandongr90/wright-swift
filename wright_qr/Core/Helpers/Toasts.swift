@@ -15,7 +15,6 @@ struct Toast: Identifiable {
         self.content = .init(content(id))
     }
     
-    /// View Properties
     var offsetX: CGFloat = 0
     var isDeleting: Bool = false
 }
@@ -33,7 +32,6 @@ extension View {
 
 fileprivate struct ToastView: View {
     @Binding var toasts: [Toast]
-    /// View Properties
     @State private var isExpanded: Bool = false
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -68,10 +66,8 @@ fileprivate struct ToastView: View {
                                     let xOffset = value.translation.width + (value.velocity.width / 2)
                                     
                                     if -xOffset > 200 {
-                                        /// Remove Toast
                                         $toasts.delete(toast.id)
                                     } else {
-                                        /// Resete Toast to it's initial position
                                         toast.offsetX = 0
                                     }
                                 }

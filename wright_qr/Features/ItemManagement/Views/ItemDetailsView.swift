@@ -21,7 +21,6 @@ struct ItemDetailsView: View {
         _item = State(initialValue: item)
     }
     
-    // Formatter para convertir fechas de MySQL/ISO
     private let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
@@ -29,14 +28,12 @@ struct ItemDetailsView: View {
         return formatter
     }()
     
-    // Formatter para mostrar fechas
     private let displayFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "MMMM/dd/yyyy"
         return formatter
     }()
     
-    // Método para formatear fecha
     private func formatDate(_ dateString: String) -> String {
         guard let date = dateFormatter.date(from: dateString) else {
             return dateString
@@ -52,12 +49,9 @@ struct ItemDetailsView: View {
                 
                 ScrollView {
                     VStack(spacing: 24) {
-                        // Header mejorado
                         HeaderView(description: item.itemDescription)
                         
-                        // Secciones de detalles mejoradas
                         VStack(spacing: 20) {
-                            // Información del Item
                             DetailSection(
                                 title: "Item Information",
                                 icon: "doc.text.fill",
@@ -69,7 +63,6 @@ struct ItemDetailsView: View {
                                 ]
                             )
                             
-                            // Especificaciones
                             DetailSection(
                                 title: "Specifications",
                                 icon: "gearshape.fill",
@@ -80,7 +73,6 @@ struct ItemDetailsView: View {
                                 ]
                             )
                             
-                            // Detalles de inspección
                             DetailSection(
                                 title: "Inspection Details",
                                 icon: "clipboard.fill",
@@ -92,7 +84,6 @@ struct ItemDetailsView: View {
                                 ]
                             )
                             
-                            // Información adicional
                             DetailSection(
                                 title: "Additional Info",
                                 icon: "info.circle.fill",
@@ -103,7 +94,6 @@ struct ItemDetailsView: View {
                         }
                         .padding(.horizontal)
                         
-                        // Botones de acción
                         VStack(spacing: 12) {
                             ActionButtonn(
                                 title: "Edit Item",
@@ -168,16 +158,13 @@ struct ItemDetailsView: View {
     
     
     private func loadItemDetails(itemId: Int) {
-        print("Iniciando carga de detalles para item: \(itemId)") // Debug
         isLoading = true
         apiService.getItemById(itemId) { result in
             if let updatedItem = result {
-                print("Item actualizado recibido: \(updatedItem.itemDescription)") // Debug
                 withAnimation {
                     self.item = updatedItem
                 }
             } else {
-                print("No se recibió item actualizado") // Debug
             }
             self.isLoading = false
         }
@@ -330,7 +317,6 @@ struct EditItemFormView: View {
     let item: Item
     var onUpdate: (Item) -> Void
     
-    // Form Fields
     @State private var itemDescription: String
     @State private var modelName: String
     @State private var brand: String
@@ -344,7 +330,6 @@ struct EditItemFormView: View {
     @State private var expirationDate: Date
     @State private var isLoading = false
     
-    // Focus States
     @FocusState private var focusedField: Field?
     
     enum Field {
@@ -361,7 +346,6 @@ struct EditItemFormView: View {
         self.item = item
         self.onUpdate = onUpdate
         
-        // Inicializar estados
         _itemDescription = State(initialValue: item.itemDescription)
         _modelName = State(initialValue: item.modelName)
         _brand = State(initialValue: item.brand)
@@ -388,7 +372,6 @@ struct EditItemFormView: View {
                 
                 ScrollView {
                     VStack(spacing: 32) {
-                        // Header
                         VStack(spacing: 12) {
                             Image(systemName: "square.and.pencil")
                                 .font(.system(size: 60))
@@ -404,9 +387,7 @@ struct EditItemFormView: View {
                         }
                         .padding(.top, 20)
                         
-                        // Form Sections
                         VStack(spacing: 24) {
-                            // Item Details Section
                             FormSection(title: "Item Details") {
                                 CustomTextField(
                                     title: "Item Name",
@@ -441,7 +422,6 @@ struct EditItemFormView: View {
                                 .focused($focusedField, equals: .comment)
                             }
                             
-                            // Specifications Section
                             FormSection(title: "Specifications") {
                                 CustomTextField(
                                     title: "Serial Number",
@@ -462,7 +442,6 @@ struct EditItemFormView: View {
                                 InspectionStatusSelector(status: $inspection, mainColor: mainColor)
                             }
                             
-                            // Inspection Details Section
                             FormSection(title: "Inspection Details") {
                                 CustomTextField(
                                     title: "Inspector Name",
@@ -493,7 +472,6 @@ struct EditItemFormView: View {
                         }
                         .padding(.horizontal)
                         
-                        // Action Buttons
                         VStack(spacing: 16) {
                             Button(action: updateItem) {
                                 HStack {
@@ -551,11 +529,9 @@ struct EditItemFormView: View {
             DispatchQueue.main.async {
                 self.isLoading = false
                 if success {
-                    print("Actualización exitosa") // Debug
                     self.onUpdate(updatedItem)
                     self.dismiss()
                 } else {
-                    print("Error en la actualización") // Debug
                 }
             }
         }

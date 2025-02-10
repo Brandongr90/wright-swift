@@ -9,6 +9,8 @@ import SwiftUI
 
 struct GenerateQRView: View {
     @State private var toasts: [Toast] = []
+    @State private var isToastSystemReady = false
+    @State private var isViewReady = false
     @State private var isLoading = false
     @State private var bags: [Bag] = []
     @State private var showAddBagForm = false
@@ -17,7 +19,6 @@ struct GenerateQRView: View {
     
     var body: some View {
         ZStack {
-            // Fondo con gradiente sutil
             LinearGradient(
                 colors: [
                     Color(uiColor: .systemBackground),
@@ -28,70 +29,77 @@ struct GenerateQRView: View {
             )
             .ignoresSafeArea()
             
-            VStack(spacing: 0) {
-                // Header mejorado
-                HeaderView()
-                    .padding(.top, 20)
-                
-                if isLoading {
-                    // Mostrar skeleton cards mientras se carga
-                    ScrollView {
-                        LazyVStack(spacing: 16) {
-                            ForEach(0..<3, id: \.self) { _ in
-                                SkeletonBagCard()
-                            }
-                        }
-                        .padding()
-                    }
-                } else if bags.isEmpty {
-                    EmptyStateView()
-                } else {
-                    // Tu lista normal de bags
-                    ScrollView {
-                        LazyVStack(spacing: 16) {
-                            ForEach(bags) { bag in
-                                NavigationLink(destination: BagDetailsView(bag: bag)) {
-                                    EnhancedBagCard(bag: bag)
+            if isViewReady {
+                // Reorganizamos la estructura completa
+                VStack(spacing: 0) {
+                    // Header fijo
+                    HeaderView()
+                        .padding(.top, 20)
+                        .frame(maxWidth: .infinity)
+                        .background(Color(uiColor: .systemBackground))
+                    
+                    // Contenido scrolleable en un GeometryReader
+                    GeometryReader { geometry in
+                        if isLoading {
+                            ScrollView {
+                                LazyVStack(spacing: 16) {
+                                    ForEach(0..<3, id: \.self) { _ in
+                                        SkeletonBagCard()
+                                    }
                                 }
+                                .padding()
+                            }
+                        } else if bags.isEmpty {
+                            EmptyStateView()
+                        } else {
+                            ScrollView {
+                                LazyVStack(spacing: 16) {
+                                    ForEach(bags) { bag in
+                                        NavigationLink(destination: BagDetailsView(bag: bag)) {
+                                            EnhancedBagCard(bag: bag)
+                                        }
+                                    }
+                                }
+                                .padding()
                             }
                         }
-                        .padding()
                     }
-                }
-                
-                // Botón de acción mejorado
-                VStack(spacing: 12) {
-                    ActionButton(
-                        title: "Add New Bag",
-                        icon: "plus.circle.fill",
-                        color: mainColor
-                    ) {
-                        showAddBagForm = true
+                    
+                    // Botón de acción
+                    VStack(spacing: 12) {
+                        ActionButton(
+                            title: "Add New Bag",
+                            icon: "plus.circle.fill",
+                            color: mainColor
+                        ) {
+                            showAddBagForm = true
+                        }
                     }
+                    .padding()
+                    .background(
+                        Rectangle()
+                            .fill(Color(uiColor: .systemBackground))
+                            .shadow(color: Color.black.opacity(0.05), radius: 15, x: 0, y: -5)
+                    )
                 }
-                .padding()
-                .background(
-                    Rectangle()
-                        .fill(Color(uiColor: .systemBackground))
-                        .shadow(color: Color.black.opacity(0.05), radius: 15, x: 0, y: -5)
-                )
             }
-            
-//            if isLoading {
-//                LoadingView(
-//                    message: "Loading bags, the first time it might take a while",
-//                    mainColor: mainColor
-//                )
-//            }
         }
         .sheet(isPresented: $showAddBagForm) {
             NewBagFormView(onSave: addBag)
         }
-        .onAppear { loadBags() }
-        .interactiveToast($toasts)
+        .onAppear {
+            loadBags()
+            // Retrasamos la activación del sistema de toasts
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                isViewReady = true
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.9) {
+                    isToastSystemReady = true
+                }
+            }
+        }
+        .modifier(ToastModifier(isEnabled: isToastSystemReady, toasts: $toasts))
     }
     
-    // Get All Bags
     func loadBags() {
         isLoading = true
         if let userId = UserManager.shared.currentUser?.id {
@@ -104,7 +112,6 @@ struct GenerateQRView: View {
         }
     }
     
-    // Add New Bag
     func addBag(bagName: String) {
         isLoading = true
         if let userId = UserManager.shared.currentUser?.id {
@@ -116,31 +123,48 @@ struct GenerateQRView: View {
             apiService.postBag(newBag) { success in
                 if success {
                     self.loadBags()
-                    withAnimation(.bouncy) {
+                    // Simplificamos el manejo de los toasts
+                    DispatchQueue.main.async {
                         let toast = Toast { id in
                             SuccessToastView(id)
                         }
-                        self.toasts.append(toast)
+                        withAnimation(.easeInOut(duration: 0.3)) {  // Cambiamos .bouncy por .easeInOut
+                            self.toasts.append(toast)
+                        }
+                        // Removemos el toast después de 5 segundos
                         DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
-                            if let index = self.toasts.firstIndex(where: { $0.id == toast.id }) {
-                                withAnimation(.bouncy) {
-                                    self.toasts.remove(at: index)
-                                }
+                            withAnimation(.easeInOut(duration: 0.3)) {
+                                self.toasts.removeAll { $0.id == toast.id }
                             }
                         }
                     }
                 } else {
-                    withAnimation(.bouncy) {
+                    DispatchQueue.main.async {
                         let toast = Toast { id in
                             ErrorToastView(id)
                         }
-                        self.toasts.append(toast)
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            self.toasts.append(toast)
+                        }
                     }
                 }
                 self.isLoading = false
             }
         } else {
             isLoading = false
+        }
+    }
+    
+    struct ToastModifier: ViewModifier {
+        let isEnabled: Bool
+        @Binding var toasts: [Toast]
+        
+        func body(content: Content) -> some View {
+            if isEnabled {
+                content.interactiveToast($toasts)
+            } else {
+                content
+            }
         }
     }
     
@@ -157,14 +181,17 @@ struct GenerateQRView: View {
                             .font(.system(size: 36))
                             .foregroundColor(mainColor)
                     )
+                    .fixedSize()  // Añadimos esto para evitar redimensionamientos
                 
                 Text("All Climbing Gear Bags")
                     .font(.title2)
                     .fontWeight(.bold)
+                    .fixedSize(horizontal: true, vertical: false)  // Y esto
                 
                 Text("Create and manage your bags")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
+                    .fixedSize(horizontal: true, vertical: false)  // Y esto
             }
             .padding(.bottom, 20)
         }
@@ -197,7 +224,6 @@ struct GenerateQRView: View {
         
         var body: some View {
             HStack(spacing: 16) {
-                // Icono mejorado
                 ZStack {
                     RoundedRectangle(cornerRadius: 16)
                         .fill(mainColor.opacity(0.1))
@@ -329,7 +355,6 @@ struct GenerateQRView: View {
     }
 }
 
-// Custom Bag Card View
 struct BagCard: View {
     let bag: Bag
     private let mainColor = Color(red: 0.04, green: 0.36, blue: 0.25)
@@ -394,19 +419,15 @@ struct SkeletonBagCard: View {
     
     var body: some View {
         HStack(spacing: 16) {
-            // Icono skeleton
             RoundedRectangle(cornerRadius: 16)
                 .fill(Color.gray.opacity(0.2))
                 .frame(width: 56, height: 56)
             
             VStack(alignment: .leading, spacing: 6) {
-                // Título skeleton
                 RoundedRectangle(cornerRadius: 4)
                     .fill(Color.gray.opacity(0.2))
                     .frame(height: 20)
                     .frame(width: 120)
-                
-                // Subtítulo skeleton
                 RoundedRectangle(cornerRadius: 4)
                     .fill(Color.gray.opacity(0.2))
                     .frame(height: 16)
@@ -415,7 +436,6 @@ struct SkeletonBagCard: View {
             
             Spacer()
             
-            // Flecha skeleton
             RoundedRectangle(cornerRadius: 4)
                 .fill(Color.gray.opacity(0.2))
                 .frame(width: 8, height: 16)

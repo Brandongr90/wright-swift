@@ -19,16 +19,13 @@ struct HomeView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
-                // Header Profile mejorado
                 ProfileHeader(
                     name: "\(userManager.currentUser?.name ?? "") \(userManager.currentUser?.last_name ?? "")",
                     role: "Safety Supervisor"
                 )
                 
-                // Vista general mejorada
                 DashboardCard(bagsCount: bagsCount, itemsCount: itemsCount)
                 
-                // Imagen decorativa
                 DecorativeImageView()
             }
             .padding(.vertical)

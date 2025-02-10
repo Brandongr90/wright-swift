@@ -30,7 +30,6 @@ struct ScanQRView: View {
                     .ignoresSafeArea()
                 
                 VStack(spacing: 20) {
-                    // Scanner Header
                     VStack(spacing: 8) {
                         Text("QR Scanner")
                             .font(.title2)
@@ -42,7 +41,6 @@ struct ScanQRView: View {
                     }
                     .padding(.top)
                     
-                    // Scanner Area
                     ZStack {
                         QRScannerView(scannedCode: $scannedCode)
                             .frame(width: UIScreen.main.bounds.width - 40, height: UIScreen.main.bounds.width - 40)
@@ -53,13 +51,11 @@ struct ScanQRView: View {
                                     .opacity(0.5)
                             )
                         
-                        // Scanner Animation
                         ScannerAnimation()
                             .frame(width: UIScreen.main.bounds.width - 80, height: 2)
                     }
                     .padding()
                     
-                    // Status Message
                     if scannedCode == nil {
                         Label("Scanning for QR Code...", systemImage: "qrcode.viewfinder")
                             .font(.callout)
@@ -68,7 +64,6 @@ struct ScanQRView: View {
                     
                     Spacer()
                     
-                    // Bottom Actions
                     VStack(spacing: 12) {
                         PhotosPicker(selection: $selectedItem,
                                      matching: .images) {
@@ -84,7 +79,6 @@ struct ScanQRView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 16))
                         }
                         
-                        // Instructions
                         VStack(spacing: 8) {
                             InstructionRow(icon: "qrcode.viewfinder", text: "Align QR code within frame")
                             InstructionRow(icon: "photo", text: "Or select from your photo library")
@@ -159,13 +153,11 @@ struct ScanQRView: View {
             case .success(let bag):
                 self.scannedBag = bag
                 self.showBagDetails = true
-                // Reseteamos isProcessingQR cuando naveguemos a la nueva vista
                 self.isProcessingQR = false
             case .failure(_):
                 self.showError = true
                 self.errorMessage = "Bag not found. Please try scanning a valid QR code."
                 self.scannedCode = nil
-                // Importante: Agregamos esto para que se pueda volver a escanear después de cerrar la alerta
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                     self.isProcessingQR = false
                 }
@@ -174,7 +166,6 @@ struct ScanQRView: View {
     }
 }
 
-// Helper Views
 struct ScannerAnimation: View {
     @State private var position = false
     

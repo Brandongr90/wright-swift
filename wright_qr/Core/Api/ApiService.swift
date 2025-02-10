@@ -67,7 +67,6 @@ class ApiService {
                 completion([])
                 return
             }
-            // print("JSON:", String(data: data, encoding: .utf8) ?? "Error decoding data")
             
             let items = try? JSONDecoder().decode([Item].self, from: data)
             DispatchQueue.main.async {

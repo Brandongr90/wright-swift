@@ -36,7 +36,6 @@ struct BagDetailsView: View {
             )
             .ignoresSafeArea()
             VStack(spacing: 0) {
-                // Header Stats
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 16) {
                         StatisticCard(
@@ -67,7 +66,6 @@ struct BagDetailsView: View {
                 if items.isEmpty {
                     EmptyStateView()
                 } else {
-                    // Lista de items mejorada
                     ScrollView {
                         LazyVStack(spacing: 12) {
                             ForEach(items) { item in
@@ -82,7 +80,6 @@ struct BagDetailsView: View {
                 
                 Spacer()
                 
-                // Bottom Action Buttons
                 VStack(spacing: 12) {
                     EnhancedActionButton(
                         title: "Add New Item",
@@ -151,7 +148,6 @@ struct BagDetailsView: View {
         }
     }
     
-    // Existing functions remain the same
     func loadItems() {
         isLoading = true
         apiService.getItemsByBag(for: bag.id) { loadedItems in
@@ -193,7 +189,6 @@ struct BagDetailsView: View {
             if success {
                 DispatchQueue.main.async {
                     isLoading = false
-                    // Navegar a GenerateQRView
                     if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
                        let window = windowScene.windows.first {
                         window.rootViewController = UIHostingController(rootView:
@@ -210,7 +205,6 @@ struct BagDetailsView: View {
     }
 }
 
-// New Components
 struct StatisticCard: View {
     let title: String
     let value: String
@@ -252,7 +246,6 @@ struct ModernItemCard: View {
     
     var body: some View {
         HStack(spacing: 16) {
-            // Icon Container
             ZStack {
                 Circle()
                     .fill(mainColor.opacity(0.1))
@@ -262,7 +255,6 @@ struct ModernItemCard: View {
                     .font(.title2)
             }
             
-            // Item Details
             VStack(alignment: .leading, spacing: 8) {
                 Text(item.itemDescription)
                     .font(.headline)
@@ -275,7 +267,6 @@ struct ModernItemCard: View {
                     
                     Spacer()
                     
-                    // Condition Badge
                     Text(item.conditionO.isEmpty ? "N/A" : item.conditionO)
                         .font(.caption)
                         .fontWeight(.medium)
@@ -309,7 +300,6 @@ struct EnhancedItemCard: View {
     
     var body: some View {
         HStack(spacing: 16) {
-            // Icono mejorado
             ZStack {
                 Circle()
                     .fill(mainColor.opacity(0.1))

@@ -14,21 +14,14 @@ struct LoadingView: View {
     
     var body: some View {
         ZStack {
-            // Fondo con efecto glassmorphism
             Color.black.opacity(0.2)
                 .background(.ultraThinMaterial)
                 .edgesIgnoringSafeArea(.all)
-            
-            // Contenedor principal
             VStack(spacing: 20) {
-                // Indicador de carga personalizado
                 ZStack {
-                    // Círculo exterior rotativo
                     Circle()
                         .stroke(mainColor.opacity(0.3), lineWidth: 8)
                         .frame(width: 60, height: 60)
-                    
-                    // Círculo interior con animación
                     Circle()
                         .trim(from: 0, to: 0.7)
                         .stroke(mainColor, style: StrokeStyle(
@@ -44,7 +37,6 @@ struct LoadingView: View {
                         )
                 }
                 
-                // Mensaje con diseño mejorado
                 Text(message)
                     .font(.system(size: 16, weight: .medium))
                     .foregroundColor(.primary)

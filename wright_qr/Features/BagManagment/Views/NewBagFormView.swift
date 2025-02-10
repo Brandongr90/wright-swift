@@ -12,19 +12,15 @@ struct NewBagFormView: View {
     @State private var bagName: String = ""
     @FocusState private var isNameFocused: Bool
     var onSave: (String) -> Void
-    
-    // Color scheme
     private let mainColor = Color(red: 0.04, green: 0.36, blue: 0.25)
     
     var body: some View {
         NavigationStack {
             ZStack {
-                // Background
                 Color(uiColor: .systemBackground)
                     .ignoresSafeArea()
                 
                 VStack(spacing: 32) {
-                    // Header Area
                     VStack(spacing: 12) {
                         Image(systemName: "bag.badge.plus")
                             .font(.system(size: 60))
@@ -40,7 +36,6 @@ struct NewBagFormView: View {
                     }
                     .padding(.top, 20)
                     
-                    // Form Area
                     VStack(alignment: .leading, spacing: 16) {
                         Text("Bag Name")
                             .font(.headline)
@@ -66,7 +61,6 @@ struct NewBagFormView: View {
                     
                     Spacer()
                     
-                    // Save Button
                     VStack(spacing: 16) {
                         Button(action: {
                             if !bagName.isEmpty {
@@ -105,7 +99,6 @@ struct NewBagFormView: View {
     }
 }
 
-// View extension for placeholder
 extension View {
     func placeholder<Content: View>(
         when shouldShow: Bool,
@@ -119,6 +112,6 @@ extension View {
     }
 }
 
-#Preview {
-    NewBagFormView(onSave: { _ in })
-}
+//#Preview {
+//    NewBagFormView(onSave: { _ in })
+//}

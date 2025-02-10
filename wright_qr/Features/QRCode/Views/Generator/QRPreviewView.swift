@@ -11,18 +11,14 @@ import UIKit
 struct QRPreviewView: View {
     let qrImage: UIImage?
     @State private var showingSaveConfirmation = false
-    
-    // Color scheme
     private let mainColor = Color(red: 0.04, green: 0.36, blue: 0.25)
     
     var body: some View {
         ZStack {
-            // Background
             Color(uiColor: .systemBackground)
                 .ignoresSafeArea()
             
             VStack(spacing: 32) {
-                // Header Area
                 VStack(spacing: 12) {
                     Image(systemName: "qrcode.viewfinder")
                         .font(.system(size: 60))
@@ -38,7 +34,6 @@ struct QRPreviewView: View {
                 }
                 .padding(.top, 20)
                 
-                // QR Code Display
                 if let qrImage = qrImage {
                     ZStack {
                         RoundedRectangle(cornerRadius: 24)
@@ -55,8 +50,7 @@ struct QRPreviewView: View {
                         .padding(24)
                     }
                     .frame(width: 300, height: 300)
-                    
-                    // Action Buttons
+                                        
                     VStack(spacing: 16) {
                         Button(action: saveImage) {
                             ActionButtonContent(

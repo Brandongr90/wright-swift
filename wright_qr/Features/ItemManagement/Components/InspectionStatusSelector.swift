@@ -8,8 +8,8 @@
 import SwiftUI
 
 struct InspectionStatusSelector: View {
-    @Binding var status: Int // 1 for Passed, 0 for Failed
-    @State private var selectedStatus: Bool // true for Passed, false for Failed
+    @Binding var status: Int
+    @State private var selectedStatus: Bool
     let mainColor: Color
     
     init(status: Binding<Int>, mainColor: Color) {
@@ -33,7 +33,6 @@ struct InspectionStatusSelector: View {
                         .fill(Color(uiColor: .secondarySystemBackground))
                     
                     HStack(spacing: 0) {
-                        // Passed Button
                         Button(action: {
                             selectedStatus = true
                             status = 1
@@ -52,7 +51,6 @@ struct InspectionStatusSelector: View {
                             .foregroundColor(selectedStatus ? .white : .primary)
                         }
                         
-                        // Failed Button
                         Button(action: {
                             selectedStatus = false
                             status = 0
