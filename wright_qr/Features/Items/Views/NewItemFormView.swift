@@ -23,7 +23,11 @@ struct NewItemFormView: View {
     @State private var inspectionDate: Date = Date()
     @State private var inspectorName: String = ""
     @State private var inspectionDate1: Date = Date()
-    @State private var expirationDate: Date = Date()
+    
+    // Cambio de expirationDate * Eliminar despues de pruebas *
+    @State private var expirationDate: String = ""
+    @State private var isExpirationNA: Bool = false
+    @State private var expirationDateValue: Date = Date()
     
     @FocusState private var focusedField: Field?
     
@@ -118,7 +122,7 @@ struct NewItemFormView: View {
                                 
                                 InspectionStatusSelector(status: $inspection, mainColor: mainColor)
                             }
-                                                
+                            
                             FormSection(title: "Inspection Details") {
                                 CustomTextField(
                                     title: "Inspector Name",
@@ -140,15 +144,59 @@ struct NewItemFormView: View {
                                     icon: "calendar.badge.clock"
                                 )
                                 
-                                CustomDatePickerWithFormat(
-                                    title: "Expiration Date",
-                                    date: $expirationDate,
-                                    icon: "calendar.badge.exclamationmark"
-                                )
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text("Expiration Date")
+                                        .font(.subheadline)
+                                        .foregroundColor(.secondary)
+                                    
+                                    VStack(spacing: 12) {
+                                        if isExpirationNA {
+                                            HStack {
+                                                Image(systemName: "calendar.badge.exclamationmark")
+                                                    .foregroundColor(mainColor)
+                                                Text("No Expiration Date (N/A)")
+                                                    .foregroundColor(.primary)
+                                                Spacer()
+                                                Button(action: {
+                                                    isExpirationNA = false
+                                                }) {
+                                                    Text("Select Date")
+                                                        .font(.footnote)
+                                                        .foregroundColor(mainColor)
+                                                }
+                                            }
+                                        } else {
+                                            HStack {
+                                                Image(systemName: "calendar.badge.exclamationmark")
+                                                    .foregroundColor(mainColor)
+                                                
+                                                DatePicker(
+                                                    "",
+                                                    selection: $expirationDateValue,
+                                                    displayedComponents: [.date]
+                                                )
+                                                .datePickerStyle(.compact)
+                                                .labelsHidden()
+                                                .frame(maxWidth: .infinity, alignment: .leading)
+                                                
+                                                Button(action: {
+                                                    isExpirationNA = true
+                                                }) {
+                                                    Text("Set N/A")
+                                                        .font(.footnote)
+                                                        .foregroundColor(mainColor)
+                                                }
+                                            }
+                                        }
+                                    }
+                                    .padding()
+                                    .background(Color(uiColor: .secondarySystemBackground))
+                                    .cornerRadius(12)
+                                }
                             }
                         }
                         .padding(.horizontal)
-                                                
+                        
                         VStack(spacing: 16) {
                             Button(action: addItem) {
                                 HStack {
@@ -182,6 +230,8 @@ struct NewItemFormView: View {
     }
     
     func addItem() {
+        let expDateString = isExpirationNA ? "N/A" : dateFormatter.string(from: expirationDateValue)
+        
         let newItem = Item(
             id: 0,
             itemDescription: itemDescription,
@@ -194,7 +244,7 @@ struct NewItemFormView: View {
             inspectionDate: dateFormatter.string(from: inspectionDate),
             inspectorName: inspectorName,
             inspectionDate1: dateFormatter.string(from: inspectionDate1),
-            expirationDate: dateFormatter.string(from: expirationDate),
+            expirationDate: expDateString,
             bagID: String(bag.id)
         )
         
