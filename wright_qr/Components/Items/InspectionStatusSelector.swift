@@ -9,12 +9,12 @@ import SwiftUI
 
 struct InspectionStatusSelector: View {
     @Binding var status: Int
-    @State private var selectedStatus: Bool
+    @State private var selectedStatus: Int
     let mainColor: Color
     
     init(status: Binding<Int>, mainColor: Color) {
         self._status = status
-        self._selectedStatus = State(initialValue: status.wrappedValue == 1)
+        self._selectedStatus = State(initialValue: status.wrappedValue)
         self.mainColor = mainColor
     }
     
@@ -33,8 +33,9 @@ struct InspectionStatusSelector: View {
                         .fill(Color(uiColor: .secondarySystemBackground))
                     
                     HStack(spacing: 0) {
+                        // Passed Button
                         Button(action: {
-                            selectedStatus = true
+                            selectedStatus = 1
                             status = 1
                         }) {
                             HStack {
@@ -42,17 +43,18 @@ struct InspectionStatusSelector: View {
                                 Text("Passed")
                             }
                             .padding(.vertical, 8)
-                            .padding(.horizontal, 16)
+                            .padding(.horizontal, 12)
                             .frame(maxWidth: .infinity)
                             .background(
                                 Capsule()
-                                    .fill(selectedStatus ? mainColor : Color.clear)
+                                    .fill(selectedStatus == 1 ? mainColor : Color.clear)
                             )
-                            .foregroundColor(selectedStatus ? .white : .primary)
+                            .foregroundColor(selectedStatus == 1 ? .white : .primary)
                         }
                         
+                        // Failed Button
                         Button(action: {
-                            selectedStatus = false
+                            selectedStatus = 0
                             status = 0
                         }) {
                             HStack {
@@ -60,13 +62,32 @@ struct InspectionStatusSelector: View {
                                 Text("Failed")
                             }
                             .padding(.vertical, 8)
-                            .padding(.horizontal, 16)
+                            .padding(.horizontal, 12)
                             .frame(maxWidth: .infinity)
                             .background(
                                 Capsule()
-                                    .fill(!selectedStatus ? Color.red : Color.clear)
+                                    .fill(selectedStatus == 0 ? Color.red : Color.clear)
                             )
-                            .foregroundColor(!selectedStatus ? .white : .primary)
+                            .foregroundColor(selectedStatus == 0 ? .white : .primary)
+                        }
+                        
+                        // N/A Button
+                        Button(action: {
+                            selectedStatus = 2
+                            status = 2
+                        }) {
+                            HStack {
+                                Image(systemName: "questionmark.circle.fill")
+                                Text("N/A")
+                            }
+                            .padding(.vertical, 8)
+                            .padding(.horizontal, 12)
+                            .frame(maxWidth: .infinity)
+                            .background(
+                                Capsule()
+                                    .fill(selectedStatus == 2 ? Color.gray : Color.clear)
+                            )
+                            .foregroundColor(selectedStatus == 2 ? .white : .primary)
                         }
                     }
                 }
