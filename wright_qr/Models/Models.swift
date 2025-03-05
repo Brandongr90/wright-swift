@@ -44,3 +44,25 @@ struct Item: Identifiable, Codable {
         case bagID = "bag_id"
     }
 }
+
+struct InspectionHistory: Identifiable, Codable {
+    let id: Int
+    let itemId: Int
+    let inspectionStatus: Int
+    let inspectionDate: String
+    let inspectorName: String
+    let nextInspectionDate: String?
+    let comments: String?
+    let createdAt: String
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case itemId = "item_id"
+        case inspectionStatus = "inspection_status"
+        case inspectionDate = "inspection_date"
+        case inspectorName = "inspector_name"
+        case nextInspectionDate = "next_inspection_date"
+        case comments
+        case createdAt = "created_at"
+    }
+}

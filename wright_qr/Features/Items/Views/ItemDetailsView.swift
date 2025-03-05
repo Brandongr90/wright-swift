@@ -14,6 +14,7 @@ struct ItemDetailsView: View {
     @State private var isLoading = false
     @State private var shouldRefresh = false
     @State private var showDeleteAlert = false
+    @State private var navigateToHistory = false
     private let mainColor = Color(red: 0.04, green: 0.36, blue: 0.25)
     let apiService = ApiService()
     
@@ -94,6 +95,34 @@ struct ItemDetailsView: View {
                                 ]
                             )
                             
+                            VStack(alignment: .leading, spacing: 16) {
+                                Text("Note: For detailed inspection records and history, please check the inspection history.")
+                                    .font(.footnote)
+                                    .foregroundColor(.secondary)
+                                    .padding(.horizontal)
+                                
+                                Button(action: {
+                                    navigateToHistory = true
+                                }) {
+                                    HStack {
+                                        Image(systemName: "clock.arrow.circlepath")
+                                            .font(.system(size: 16))
+                                        Text("View Inspection History")
+                                            .font(.system(size: 15, weight: .medium))
+                                    }
+                                    .foregroundColor(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 12)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .fill(Color.blue)
+                                    )
+                                    .padding(.horizontal)
+                                }
+                            }
+                            .padding(.top, 4)
+                            .padding(.bottom, 12)
+                            
                             DetailSection(
                                 title: "Additional Info",
                                 icon: "info.circle.fill",
@@ -129,6 +158,13 @@ struct ItemDetailsView: View {
                     LoadingView(message: "Updating item...", mainColor: mainColor)
                 }
             }
+            .background(
+                NavigationLink(
+                    destination: InspectionHistoryView(item: item),
+                    isActive: $navigateToHistory,
+                    label: { EmptyView() }
+                )
+            )
             .alert("Delete Item", isPresented: $showDeleteAlert) {
                 Button("Cancel", role: .cancel) { }
                 Button("Delete", role: .destructive) {

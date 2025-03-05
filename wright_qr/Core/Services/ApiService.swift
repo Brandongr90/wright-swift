@@ -302,4 +302,67 @@ class ApiService {
             }
         }.resume()
     }
+    
+    // ******************************************************
+    // ****************  Items History  *********************
+    // ******************************************************
+    
+    // Obtener historial de inspecciones
+    func getInspectionHistory(for itemId: Int, completion: @escaping ([InspectionHistory]) -> Void) {
+        guard let url = URL(string: "\(baseUrl)/items/\(itemId)/inspections") else {
+            completion([])
+            return
+        }
+        
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            guard let data = data, error == nil else {
+                completion([])
+                return
+            }
+            
+            let inspections = try? JSONDecoder().decode([InspectionHistory].self, from: data)
+            DispatchQueue.main.async {
+                completion(inspections ?? [])
+            }
+        }.resume()
+    }
+    
+    // Crear nueva inspección
+    func createInspection(itemId: Int, status: Int, date: String, inspector: String,
+                         nextDate: String, comments: String, completion: @escaping (Bool) -> Void) {
+        guard let url = URL(string: "\(baseUrl)/inspections") else {
+            completion(false)
+            return
+        }
+        
+        let inspectionData: [String: Any] = [
+            "item_id": itemId,
+            "inspection_status": status,
+            "inspection_date": date,
+            "inspector_name": inspector,
+            "next_inspection_date": nextDate,
+            "comments": comments
+        ]
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        do {
+            request.httpBody = try JSONSerialization.data(withJSONObject: inspectionData)
+        } catch {
+            completion(false)
+            return
+        }
+        
+        URLSession.shared.dataTask(with: request) { _, response, _ in
+            DispatchQueue.main.async {
+                if let httpResponse = response as? HTTPURLResponse {
+                    completion(httpResponse.statusCode == 201)
+                } else {
+                    completion(false)
+                }
+            }
+        }.resume()
+    }
 }

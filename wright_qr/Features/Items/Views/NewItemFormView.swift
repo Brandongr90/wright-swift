@@ -432,6 +432,7 @@ struct CustomDatePickerWithFormat: View {
                 )
                 .datePickerStyle(.compact)
                 .labelsHidden()
+                .accentColor(mainColor)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .transformEffect(.init(translationX: -8, y: 0))
                 
