@@ -266,4 +266,40 @@ class ApiService {
             }
         }.resume()
     }
+    
+    // Update Bag
+    func updateBag(_ bag: Bag, completion: @escaping (Bool) -> Void) {
+        guard let url = URL(string: "\(baseUrl)/bags/\(bag.id)") else {
+            completion(false)
+            return
+        }
+        
+        let bagData: [String: Any] = [
+            "bag_name": bag.name,
+            "assignment_date": bag.assignmentDate ?? ""
+        ]
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "PUT"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        do {
+            request.httpBody = try JSONSerialization.data(withJSONObject: bagData)
+        } catch {
+            print("Error encoding bag: \(error)")
+            completion(false)
+            return
+        }
+        
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            DispatchQueue.main.async {
+                if let httpResponse = response as? HTTPURLResponse,
+                   httpResponse.statusCode == 200 {
+                    completion(true)
+                } else {
+                    completion(false)
+                }
+            }
+        }.resume()
+    }
 }

@@ -10,8 +10,10 @@ import SwiftUI
 struct NewBagFormView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var bagName: String = ""
+    @State private var hasAssignmentDate: Bool = false
+    @State private var assignmentDate: Date = Date()
     @FocusState private var isNameFocused: Bool
-    var onSave: (String) -> Void
+    var onSave: (Bag) -> Void
     private let mainColor = Color(red: 0.04, green: 0.36, blue: 0.25)
     
     var body: some View {
@@ -26,26 +28,22 @@ struct NewBagFormView: View {
                             .font(.system(size: 60))
                             .foregroundColor(mainColor)
                         
-                        Text("New Climbing Gear Bag")
+                        Text("Assign a new bag")
                             .font(.system(size: 28, weight: .bold, design: .rounded))
                             .foregroundColor(.primary)
                         
-                        Text("Give your bag a memorable name")
+                        Text("Enter the name of the owner of the bag")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                     }
                     .padding(.top, 20)
                     
                     VStack(alignment: .leading, spacing: 16) {
-                        Text("Bag Name")
+                        Text("Owner Name")
                             .font(.headline)
                             .foregroundColor(.primary)
                         
-                        TextField("", text: $bagName)
-                            .placeholder(when: bagName.isEmpty) {
-                                Text("Enter the owner name")
-                                    .foregroundColor(.secondary)
-                            }
+                        TextField("Enter the owner name", text: $bagName)
                             .padding()
                             .background(
                                 RoundedRectangle(cornerRadius: 12)
@@ -56,6 +54,30 @@ struct NewBagFormView: View {
                                     .stroke(isNameFocused ? mainColor : Color.clear, lineWidth: 2)
                             )
                             .focused($isNameFocused)
+                        
+                        Toggle("Add Assignment Date", isOn: $hasAssignmentDate)
+                            .padding(.top, 12)
+                        
+                        if hasAssignmentDate {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Assignment Date")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                                
+                                DatePicker(
+                                    "",
+                                    selection: $assignmentDate,
+                                    displayedComponents: [.date]
+                                )
+                                .datePickerStyle(.compact)
+                                .labelsHidden()
+                                .padding()
+                                .background(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .fill(Color(uiColor: .secondarySystemBackground))
+                                )
+                            }
+                        }
                     }
                     .padding(.horizontal)
                     
@@ -64,7 +86,7 @@ struct NewBagFormView: View {
                     VStack(spacing: 16) {
                         Button(action: {
                             if !bagName.isEmpty {
-                                onSave(bagName)
+                                saveBag()
                                 dismiss()
                             }
                         }) {
@@ -97,21 +119,23 @@ struct NewBagFormView: View {
             }
         }
     }
-}
-
-extension View {
-    func placeholder<Content: View>(
-        when shouldShow: Bool,
-        alignment: Alignment = .leading,
-        @ViewBuilder placeholder: () -> Content) -> some View {
+    
+    private func saveBag() {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
         
-        ZStack(alignment: alignment) {
-            placeholder().opacity(shouldShow ? 1 : 0)
-            self
-        }
+        let assignmentDateString = hasAssignmentDate ? dateFormatter.string(from: assignmentDate) : nil
+        
+        // Use UserManager to get the current user's ID
+        let userId = UserManager.shared.currentUser?.id ?? 0
+        
+        let newBag = Bag(
+            id: UUID().uuidString,
+            name: bagName,
+            userId: userId,
+            assignmentDate: assignmentDateString
+        )
+        
+        onSave(newBag)
     }
 }
-
-//#Preview {
-//    NewBagFormView(onSave: { _ in })
-//}

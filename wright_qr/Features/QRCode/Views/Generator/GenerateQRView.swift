@@ -85,7 +85,9 @@ struct GenerateQRView: View {
             }
         }
         .sheet(isPresented: $showAddBagForm) {
-            NewBagFormView(onSave: addBag)
+            NewBagFormView(onSave: { newBag in
+                addBag(bag: newBag)
+            })
         }
         .onAppear {
             loadBags()
@@ -112,46 +114,35 @@ struct GenerateQRView: View {
         }
     }
     
-    func addBag(bagName: String) {
+    func addBag(bag: Bag) {
         isLoading = true
-        if let userId = UserManager.shared.currentUser?.id {
-            let newBag = Bag(
-                id: UUID().uuidString,
-                name: bagName,
-                userId: userId
-            )
-            apiService.postBag(newBag) { success in
-                if success {
-                    self.loadBags()
-                    // Simplificamos el manejo de los toasts
-                    DispatchQueue.main.async {
-                        let toast = Toast { id in
-                            SuccessToastView(id)
-                        }
-                        withAnimation(.easeInOut(duration: 0.3)) {  // Cambiamos .bouncy por .easeInOut
-                            self.toasts.append(toast)
-                        }
-                        // Removemos el toast después de 5 segundos
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
-                            withAnimation(.easeInOut(duration: 0.3)) {
-                                self.toasts.removeAll { $0.id == toast.id }
-                            }
-                        }
+        apiService.postBag(bag) { success in
+            if success {
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    let toast = Toast { id in
+                        SuccessToastView(id)
                     }
-                } else {
-                    DispatchQueue.main.async {
-                        let toast = Toast { id in
-                            ErrorToastView(id)
-                        }
+                    self.toasts.append(toast)
+                    
+                    // Removemos el toast después de 5 segundos
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
                         withAnimation(.easeInOut(duration: 0.3)) {
-                            self.toasts.append(toast)
+                            self.toasts.removeAll { $0.id == toast.id }
                         }
                     }
                 }
-                self.isLoading = false
+                self.loadBags()
+            } else {
+                DispatchQueue.main.async {
+                    let toast = Toast { id in
+                        ErrorToastView(id)
+                    }
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        self.toasts.append(toast)
+                    }
+                }
             }
-        } else {
-            isLoading = false
+            self.isLoading = false
         }
     }
     

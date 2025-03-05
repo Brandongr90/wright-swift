@@ -11,11 +11,13 @@ struct Bag: Codable, Identifiable {
     let id: String
     let name: String
     let userId: Int
+    let assignmentDate: String?
     
     enum CodingKeys: String, CodingKey {
         case id = "bag_id"
         case name = "bag_name"
         case userId = "user_id"
+        case assignmentDate = "assignment_date"
     }
 }
 
