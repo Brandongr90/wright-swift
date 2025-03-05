@@ -244,6 +244,7 @@ struct BagDetailsView: View {
                                             displayedComponents: [.date]
                                         )
                                         .datePickerStyle(.compact)
+                                        .accentColor(mainColor)
                                         .labelsHidden()
                                     }
                                     .padding()

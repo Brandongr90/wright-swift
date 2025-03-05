@@ -71,6 +71,7 @@ struct NewBagFormView: View {
                                 )
                                 .datePickerStyle(.compact)
                                 .labelsHidden()
+                                .accentColor(mainColor)
                                 .padding()
                                 .background(
                                     RoundedRectangle(cornerRadius: 12)
