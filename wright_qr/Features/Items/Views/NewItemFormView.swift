@@ -23,7 +23,16 @@ struct NewItemFormView: View {
     @State private var inspectionDate: Date = Date()
     @State private var inspectorName: String = ""
     @State private var inspectionDate1: Date = Date()
-    @State private var expirationDate: Date = Date()
+    
+    // Dropdown state variables
+    @State private var isInspectorDropdownShown = false
+    // Static list of inspectors
+    private let inspectors = ["Saul Villa"]
+    
+    // Expiration date variables
+    @State private var expirationDate: String = ""
+    @State private var isExpirationNA: Bool = false
+    @State private var expirationDateValue: Date = Date()
     
     @FocusState private var focusedField: Field?
     
@@ -118,13 +127,14 @@ struct NewItemFormView: View {
                                 
                                 InspectionStatusSelector(status: $inspection, mainColor: mainColor)
                             }
-                                                
+                            
                             FormSection(title: "Inspection Details") {
-                                CustomTextField(
-                                    title: "Inspector Name",
-                                    text: $inspectorName,
-                                    icon: "person.fill",
-                                    focused: focusedField == .inspector
+                                InspectorDropdown(
+                                    inspectorName: $inspectorName,
+                                    isDropdownShown: $isInspectorDropdownShown,
+                                    inspectors: inspectors,
+                                    focused: focusedField == .inspector,
+                                    mainColor: mainColor
                                 )
                                 .focused($focusedField, equals: .inspector)
                                 
@@ -140,15 +150,59 @@ struct NewItemFormView: View {
                                     icon: "calendar.badge.clock"
                                 )
                                 
-                                CustomDatePickerWithFormat(
-                                    title: "Expiration Date",
-                                    date: $expirationDate,
-                                    icon: "calendar.badge.exclamationmark"
-                                )
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text("Expiration Date")
+                                        .font(.subheadline)
+                                        .foregroundColor(.secondary)
+                                    
+                                    VStack(spacing: 12) {
+                                        if isExpirationNA {
+                                            HStack {
+                                                Image(systemName: "calendar.badge.exclamationmark")
+                                                    .foregroundColor(mainColor)
+                                                Text("No Expiration Date (N/A)")
+                                                    .foregroundColor(.primary)
+                                                Spacer()
+                                                Button(action: {
+                                                    isExpirationNA = false
+                                                }) {
+                                                    Text("Select Date")
+                                                        .font(.footnote)
+                                                        .foregroundColor(mainColor)
+                                                }
+                                            }
+                                        } else {
+                                            HStack {
+                                                Image(systemName: "calendar.badge.exclamationmark")
+                                                    .foregroundColor(mainColor)
+                                                
+                                                DatePicker(
+                                                    "",
+                                                    selection: $expirationDateValue,
+                                                    displayedComponents: [.date]
+                                                )
+                                                .datePickerStyle(.compact)
+                                                .labelsHidden()
+                                                .frame(maxWidth: .infinity, alignment: .leading)
+                                                
+                                                Button(action: {
+                                                    isExpirationNA = true
+                                                }) {
+                                                    Text("Set N/A")
+                                                        .font(.footnote)
+                                                        .foregroundColor(mainColor)
+                                                }
+                                            }
+                                        }
+                                    }
+                                    .padding()
+                                    .background(Color(uiColor: .secondarySystemBackground))
+                                    .cornerRadius(12)
+                                }
                             }
                         }
                         .padding(.horizontal)
-                                                
+                        
                         VStack(spacing: 16) {
                             Button(action: addItem) {
                                 HStack {
@@ -175,6 +229,10 @@ struct NewItemFormView: View {
                         .padding(.bottom, 20)
                     }
                 }
+                .onTapGesture {
+                    // Close dropdown when tapping outside
+                    isInspectorDropdownShown = false
+                }
             }
             .navigationBarHidden(true)
         }
@@ -182,6 +240,8 @@ struct NewItemFormView: View {
     }
     
     func addItem() {
+        let expDateString = isExpirationNA ? "N/A" : dateFormatter.string(from: expirationDateValue)
+        
         let newItem = Item(
             id: 0,
             itemDescription: itemDescription,
@@ -194,7 +254,7 @@ struct NewItemFormView: View {
             inspectionDate: dateFormatter.string(from: inspectionDate),
             inspectorName: inspectorName,
             inspectionDate1: dateFormatter.string(from: inspectionDate1),
-            expirationDate: dateFormatter.string(from: expirationDate),
+            expirationDate: expDateString,
             bagID: String(bag.id)
         )
         
@@ -289,6 +349,8 @@ struct NewItemFormView: View {
     }
 }
 
+// Este componente ha sido movido a un archivo separado: InspectorDropdown.swift
+
 struct FormSection<Content: View>: View {
     let title: String
     let content: Content
@@ -370,6 +432,7 @@ struct CustomDatePickerWithFormat: View {
                 )
                 .datePickerStyle(.compact)
                 .labelsHidden()
+                .accentColor(mainColor)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .transformEffect(.init(translationX: -8, y: 0))
                 

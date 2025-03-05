@@ -14,6 +14,7 @@ struct ItemDetailsView: View {
     @State private var isLoading = false
     @State private var shouldRefresh = false
     @State private var showDeleteAlert = false
+    @State private var navigateToHistory = false
     private let mainColor = Color(red: 0.04, green: 0.36, blue: 0.25)
     let apiService = ApiService()
     
@@ -69,7 +70,17 @@ struct ItemDetailsView: View {
                                 items: [
                                     DetailItem(icon: "number", title: "Serial Number", value: item.serialNumber),
                                     DetailItem(icon: "sparkles", title: "Condition", value: item.conditionO),
-                                    DetailItem(icon: "checkmark.seal", title: "Inspection Status", value: item.inspection == 1 ? "Passed" : "Failed")
+                                    DetailItem(
+                                        icon: item.inspection == 1 ? "checkmark.seal" :
+                                            (item.inspection == 0 ? "xmark.seal" : "questionmark.circle.dashed"),
+                                        title: "Inspection Status",
+                                        value: item.inspection == 1 ? "Passed" :
+                                            (item.inspection == 0 ? "Failed" : "N/A"),
+                                        iconColor: item.inspection == 1 ? .green :
+                                            (item.inspection == 0 ? .red : .gray),
+                                        valueColor: item.inspection == 1 ? .green :
+                                            (item.inspection == 0 ? .red : .gray)
+                                    )
                                 ]
                             )
                             
@@ -83,6 +94,34 @@ struct ItemDetailsView: View {
                                     DetailItem(icon: "calendar.badge.exclamationmark", title: "Expiration", value: formatDate(item.expirationDate))
                                 ]
                             )
+                            
+                            VStack(alignment: .leading, spacing: 16) {
+                                Text("Note: For detailed inspection records and history, please check the inspection history.")
+                                    .font(.footnote)
+                                    .foregroundColor(.secondary)
+                                    .padding(.horizontal)
+                                
+                                Button(action: {
+                                    navigateToHistory = true
+                                }) {
+                                    HStack {
+                                        Image(systemName: "clock.arrow.circlepath")
+                                            .font(.system(size: 16))
+                                        Text("View Inspection History")
+                                            .font(.system(size: 15, weight: .medium))
+                                    }
+                                    .foregroundColor(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 12)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .fill(Color.blue)
+                                    )
+                                    .padding(.horizontal)
+                                }
+                            }
+                            .padding(.top, 4)
+                            .padding(.bottom, 12)
                             
                             DetailSection(
                                 title: "Additional Info",
@@ -119,6 +158,13 @@ struct ItemDetailsView: View {
                     LoadingView(message: "Updating item...", mainColor: mainColor)
                 }
             }
+            .background(
+                NavigationLink(
+                    destination: InspectionHistoryView(item: item),
+                    isActive: $navigateToHistory,
+                    label: { EmptyView() }
+                )
+            )
             .alert("Delete Item", isPresented: $showDeleteAlert) {
                 Button("Cancel", role: .cancel) { }
                 Button("Delete", role: .destructive) {
@@ -228,6 +274,8 @@ struct DetailItem {
     let icon: String
     let title: String
     let value: String
+    var iconColor: Color? = nil
+    var valueColor: Color? = nil
 }
 
 struct EnhancedDetailRow: View {
@@ -237,7 +285,7 @@ struct EnhancedDetailRow: View {
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: item.icon)
-                .foregroundColor(mainColor)
+                .foregroundColor(item.iconColor ?? mainColor)
                 .frame(width: 24)
             
             VStack(alignment: .leading, spacing: 4) {
@@ -247,7 +295,7 @@ struct EnhancedDetailRow: View {
                 
                 Text(item.value.isEmpty ? "N/A" : item.value)
                     .font(.body)
-                    .foregroundColor(.primary)
+                    .foregroundColor(item.valueColor ?? .primary)
             }
         }
         .padding()

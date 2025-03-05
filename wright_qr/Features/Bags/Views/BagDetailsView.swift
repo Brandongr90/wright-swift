@@ -9,7 +9,7 @@ import SwiftUI
 import CoreImage.CIFilterBuiltins
 
 struct BagDetailsView: View {
-    var bag: Bag
+    @State private var bag: Bag
     @State private var items: [Item] = []
     @State private var showAddItemForm = false
     @State private var isLoading = false
@@ -22,7 +22,30 @@ struct BagDetailsView: View {
     @Environment(\.presentationMode) var presentationMode
     let apiService = ApiService()
     
+    @State private var showEditBagForm = false
+    @State private var editedBagName = ""
+    @State private var editedAssignmentDate = Date()
+    @State private var hasAssignmentDate = false
+    
     private let mainColor = Color(red: 0.04, green: 0.36, blue: 0.25)
+    
+    init(bag: Bag) {
+        _bag = State(initialValue: bag)
+    }
+    
+    private func formatAssignmentDate(_ dateString: String) -> String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
+        
+        guard let date = dateFormatter.date(from: dateString) else {
+            return dateString // Return original string if parsing fails
+        }
+        
+        let outputFormatter = DateFormatter()
+        outputFormatter.dateFormat = "MM/dd/yyyy" // Month/Day/Year format
+        
+        return outputFormatter.string(from: date)
+    }
     
     var body: some View {
         ZStack {
@@ -36,6 +59,24 @@ struct BagDetailsView: View {
             )
             .ignoresSafeArea()
             VStack(spacing: 0) {
+                // Assignment Date display if it exists
+                if let assignmentDate = bag.assignmentDate, !assignmentDate.isEmpty {
+                    HStack {
+                        Image(systemName: "calendar")
+                            .foregroundColor(mainColor)
+                        
+                        // Format the date string
+                        let formattedDate = formatAssignmentDate(assignmentDate)
+                        
+                        Text("Assigned on: \(formattedDate)")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.horizontal)
+                    .padding(.top, 8)
+                    .padding(.bottom, 8)
+                }
+                
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 16) {
                         StatisticCard(
@@ -135,6 +176,125 @@ struct BagDetailsView: View {
                 QRPreviewView(qrImage: qrImage)
             }
         }
+        .sheet(isPresented: $showEditBagForm) {
+            NavigationStack {
+                ZStack {
+                    Color(uiColor: .systemBackground)
+                        .ignoresSafeArea()
+                    
+                    VStack(spacing: 24) {
+                        // Header Image
+                        VStack(spacing: 12) {
+                            Circle()
+                                .fill(mainColor.opacity(0.1))
+                                .frame(width: 80, height: 80)
+                                .overlay(
+                                    Image(systemName: "duffle.bag")
+                                        .font(.system(size: 40))
+                                        .foregroundColor(mainColor)
+                                )
+                            
+                            Text("Edit Bag Details")
+                                .font(.system(size: 24, weight: .bold))
+                                .foregroundColor(.primary)
+                            
+                            Text("Update information about this bag")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
+                        .padding(.top, 20)
+                        
+                        // Form Fields
+                        VStack(spacing: 20) {
+                            // Bag Name Field
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("New Owner Name")
+                                    .font(.headline)
+                                    .foregroundColor(.primary)
+                                
+                                HStack {
+                                    Image(systemName: "tag")
+                                        .foregroundColor(mainColor)
+                                    TextField("Owner Name", text: $editedBagName)
+                                }
+                                .padding()
+                                .background(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .fill(Color(uiColor: .secondarySystemBackground))
+                                )
+                            }
+                            
+                            // Assignment Date Toggle & Picker
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("Assignment Date")
+                                    .font(.headline)
+                                    .foregroundColor(.primary)
+                                
+                                Toggle("Include assignment date", isOn: $hasAssignmentDate)
+                                    .padding(.vertical, 4)
+                                
+                                if hasAssignmentDate {
+                                    HStack {
+                                        Image(systemName: "calendar")
+                                            .foregroundColor(mainColor)
+                                        
+                                        DatePicker(
+                                            "Select Date",
+                                            selection: $editedAssignmentDate,
+                                            displayedComponents: [.date]
+                                        )
+                                        .datePickerStyle(.compact)
+                                        .accentColor(mainColor)
+                                        .labelsHidden()
+                                    }
+                                    .padding()
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .fill(Color(uiColor: .secondarySystemBackground))
+                                    )
+                                }
+                            }
+                        }
+                        .padding(.horizontal)
+                        
+                        Spacer()
+                        
+                        // Action Buttons
+                        VStack(spacing: 12) {
+                            Button(action: {
+                                updateBag()
+                                showEditBagForm = false
+                            }) {
+                                HStack {
+                                    Image(systemName: "checkmark.circle.fill")
+                                    Text("Save Changes")
+                                        .fontWeight(.semibold)
+                                }
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 54)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .fill(mainColor)
+                                        .shadow(color: mainColor.opacity(0.3), radius: 5, x: 0, y: 2)
+                                )
+                            }
+                            
+                            Button(action: {
+                                showEditBagForm = false
+                            }) {
+                                Text("Cancel")
+                                    .fontWeight(.medium)
+                                    .foregroundColor(.secondary)
+                            }
+                            .padding(.bottom, 10)
+                        }
+                        .padding(.horizontal)
+                    }
+                    .padding(.bottom, 20)
+                }
+            }
+        }
         .sheet(isPresented: $showAddItemForm) {
             NewItemFormView(bag: bag) { newItem in
                 loadItems()
@@ -143,6 +303,26 @@ struct BagDetailsView: View {
         }
         .navigationTitle(bag.name)
         .navigationBarTitleDisplayMode(.large)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button(action: {
+                    editedBagName = bag.name
+                    if let dateString = bag.assignmentDate, !dateString.isEmpty {
+                        let dateFormatter = DateFormatter()
+                        dateFormatter.dateFormat = "yyyy-MM-dd"
+                        if let date = dateFormatter.date(from: dateString) {
+                            editedAssignmentDate = date
+                            hasAssignmentDate = true
+                        }
+                    }
+                    showEditBagForm = true
+                }) {
+                    Image(systemName: "square.and.pencil")
+                        .font(.system(size: 20))
+                        .foregroundColor(mainColor)
+                }
+            }
+        }
         .onAppear {
             loadItems()
         }
@@ -177,6 +357,34 @@ struct BagDetailsView: View {
                         self.isGeneratingQR = false
                         self.showQRPreview = true
                     }
+                }
+            }
+        }
+    }
+    
+    func updateBag() {
+        isLoading = true
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        
+        let assignmentDateString = hasAssignmentDate ? dateFormatter.string(from: editedAssignmentDate) : nil
+        
+        let updatedBag = Bag(
+            id: bag.id,
+            name: editedBagName,
+            userId: bag.userId,
+            assignmentDate: assignmentDateString
+        )
+        
+        apiService.updateBag(updatedBag) { success in
+            DispatchQueue.main.async {
+                self.isLoading = false
+                if success {
+                    // Update the local bag data
+                    self.bag = updatedBag
+                } else {
+                    // Handle error
+                    print("Failed to update bag")
                 }
             }
         }
