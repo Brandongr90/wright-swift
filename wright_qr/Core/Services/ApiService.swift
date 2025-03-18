@@ -12,6 +12,21 @@ enum APIError: Error {
     case invalidResponse
     case networkError
     case decodingError
+    case noData                  // Añadido para el primer error
+    case serverError(String)
+}
+
+struct UploadResponse: Decodable {
+    let success: Bool
+    let url: String
+}
+
+extension Data {
+    mutating func append(_ string: String) {
+        if let data = string.data(using: .utf8) {
+            self.append(data)
+        }
+    }
 }
 
 class ApiService {
@@ -143,7 +158,8 @@ class ApiService {
             "inspector_name": item.inspectorName,
             "inspection_date_1": item.inspectionDate1,
             "expiration_date": item.expirationDate,
-            "bag_id": item.bagID
+            "bag_id": item.bagID,
+            "image_url": item.imageUrl
         ]
         
         var request = URLRequest(url: url)
@@ -329,7 +345,7 @@ class ApiService {
     
     // Crear nueva inspección
     func createInspection(itemId: Int, status: Int, date: String, inspector: String,
-                         nextDate: String, comments: String, completion: @escaping (Bool) -> Void) {
+                          nextDate: String, comments: String, completion: @escaping (Bool) -> Void) {
         guard let url = URL(string: "\(baseUrl)/inspections") else {
             completion(false)
             return
@@ -364,5 +380,101 @@ class ApiService {
                 }
             }
         }.resume()
+    }
+    
+    // ******************************************************
+    // *****************  Upload Image  *********************
+    // ******************************************************
+    
+    func uploadImage(_ imageData: Data, completion: @escaping (Result<String, Error>) -> Void) {
+        let urlString = "\(baseUrl)/upload"
+        guard let url = URL(string: urlString) else {
+            completion(.failure(APIError.invalidURL))
+            return
+        }
+        
+        // Crear un límite para el multipart/form-data
+        let boundary = UUID().uuidString
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        request.timeoutInterval = 60 // Aumentar el tiempo de espera para archivos grandes
+        
+        // Crear el cuerpo de la solicitud
+        var body = Data()
+        
+        // Añadir el campo de la imagen
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"image\"; filename=\"image.jpg\"\r\n".data(using: .utf8)!)
+        body.append("Content-Type: image/jpeg\r\n\r\n".data(using: .utf8)!)
+        body.append(imageData)
+        body.append("\r\n".data(using: .utf8)!)
+        
+        // Cerrar el cuerpo
+        body.append("--\(boundary)--\r\n".data(using: .utf8)!)
+        
+        request.httpBody = body
+        
+        let task = URLSession.shared.dataTask(with: request) { data, response, error in
+            // Verificar errores de red
+            if let error = error {
+                print("Error de red al subir imagen: \(error.localizedDescription)")
+                DispatchQueue.main.async {
+                    completion(.failure(error))
+                }
+                return
+            }
+            
+            // Verificar respuesta HTTP
+            guard let httpResponse = response as? HTTPURLResponse else {
+                print("Respuesta no HTTP")
+                DispatchQueue.main.async {
+                    completion(.failure(APIError.invalidResponse))
+                }
+                return
+            }
+            
+            // Verificar código de estado
+            guard (200...299).contains(httpResponse.statusCode) else {
+                print("Error HTTP: \(httpResponse.statusCode)")
+                DispatchQueue.main.async {
+                    completion(.failure(APIError.networkError))
+                }
+                return
+            }
+            
+            // Verificar que hay datos
+            guard let data = data else {
+                print("No se recibieron datos")
+                DispatchQueue.main.async {
+                    completion(.failure(APIError.noData))
+                }
+                return
+            }
+            
+            // Decodificar respuesta
+            do {
+                let uploadResponse = try JSONDecoder().decode(UploadResponse.self, from: data)
+                if uploadResponse.success {
+                    print("Imagen subida correctamente: \(uploadResponse.url)")
+                    DispatchQueue.main.async {
+                        completion(.success(uploadResponse.url))
+                    }
+                } else {
+                    print("La subida de la imagen no fue exitosa")
+                    DispatchQueue.main.async {
+                        completion(.failure(APIError.serverError("Upload failed")))
+                    }
+                }
+            } catch {
+                print("Error al decodificar respuesta: \(error)")
+                DispatchQueue.main.async {
+                    completion(.failure(APIError.decodingError))
+                }
+            }
+        }
+        
+        task.resume()
     }
 }

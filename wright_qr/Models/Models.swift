@@ -28,6 +28,7 @@ struct Item: Identifiable, Codable {
     let inspection: Int
     let inspectionDate, inspectorName, inspectionDate1, expirationDate: String
     let bagID: String
+    let imageUrl: String?  // Nuevo campo para la URL de la imagen
     
     enum CodingKeys: String, CodingKey {
         case id
@@ -42,6 +43,7 @@ struct Item: Identifiable, Codable {
         case inspectionDate1 = "inspection_date_1"
         case expirationDate = "expiration_date"
         case bagID = "bag_id"
+        case imageUrl = "image_url"
     }
 }
 
