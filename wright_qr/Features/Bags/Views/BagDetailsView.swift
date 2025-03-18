@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 import CoreImage.CIFilterBuiltins
 
 struct BagDetailsView: View {
@@ -26,6 +27,10 @@ struct BagDetailsView: View {
     @State private var editedBagName = ""
     @State private var editedAssignmentDate = Date()
     @State private var hasAssignmentDate = false
+    
+    @State private var isExportingCSV = false
+    @State private var showExportSuccess = false
+    @State private var toasts: [Toast] = []
     
     private let mainColor = Color(red: 0.04, green: 0.36, blue: 0.25)
     
@@ -162,7 +167,11 @@ struct BagDetailsView: View {
             if isGeneratingQR {
                 LoadingView(message: "Generating QR Code...", mainColor: mainColor)
             }
+            if isExportingCSV {
+                        LoadingView(message: "Generando archivo CSV...", mainColor: mainColor)
+                    }
         }
+        .interactiveToast($toasts)
         .alert("Delete Bag", isPresented: $showDeleteAlert) {
             Button("Cancel", role: .cancel) {}
             Button("Delete", role: .destructive) {
@@ -305,21 +314,31 @@ struct BagDetailsView: View {
         .navigationBarTitleDisplayMode(.large)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button(action: {
-                    editedBagName = bag.name
-                    if let dateString = bag.assignmentDate, !dateString.isEmpty {
-                        let dateFormatter = DateFormatter()
-                        dateFormatter.dateFormat = "yyyy-MM-dd"
-                        if let date = dateFormatter.date(from: dateString) {
-                            editedAssignmentDate = date
-                            hasAssignmentDate = true
-                        }
+                HStack(spacing: 12) {
+                    Button(action: {
+                        exportToCSV()
+                    }) {
+                        Image(systemName: "square.and.arrow.up")
+                            .font(.system(size: 20))
+                            .foregroundColor(mainColor)
                     }
-                    showEditBagForm = true
-                }) {
-                    Image(systemName: "square.and.pencil")
-                        .font(.system(size: 20))
-                        .foregroundColor(mainColor)
+                    
+                    Button(action: {
+                        editedBagName = bag.name
+                        if let dateString = bag.assignmentDate, !dateString.isEmpty {
+                            let dateFormatter = DateFormatter()
+                            dateFormatter.dateFormat = "yyyy-MM-dd"
+                            if let date = dateFormatter.date(from: dateString) {
+                                editedAssignmentDate = date
+                                hasAssignmentDate = true
+                            }
+                        }
+                        showEditBagForm = true
+                    }) {
+                        Image(systemName: "square.and.pencil")
+                            .font(.system(size: 20))
+                            .foregroundColor(mainColor)
+                    }
                 }
             }
         }
@@ -410,6 +429,229 @@ struct BagDetailsView: View {
                 print("Error")
             }
         }
+    }
+    
+    func exportToCSV() {
+        isExportingCSV = true
+        
+        // Ejecutar en un hilo en segundo plano para no bloquear la UI
+        DispatchQueue.global(qos: .userInitiated).async {
+            // Genera el contenido CSV
+            let csvContent = generateCSVContent()
+            
+            // Guarda temporalmente el archivo CSV
+            guard let csvURL = saveCSVToTemporaryDirectory(content: csvContent) else {
+                DispatchQueue.main.async {
+                    isExportingCSV = false
+                    showExportError()
+                }
+                return
+            }
+            
+            // Volver al hilo principal para mostrar el diálogo de compartir
+            DispatchQueue.main.async {
+                isExportingCSV = false
+                shareCSV(fileURL: csvURL)
+            }
+        }
+    }
+    
+    func generateCSVContent() -> String {
+        // Encabezado para la bolsa
+        var csvString = "Bag Information\n"
+        csvString += "ID,Name,Assignment Date\n"
+        csvString += "\"\(bag.id)\",\"\(bag.name)\",\"\(bag.assignmentDate ?? "")\"\n\n"
+        
+        // Encabezado para los items
+        csvString += "Items\n"
+        csvString += "ID,Description,Model,Brand,Serial Number,Condition,Inspection Status,Inspection Date,Inspector,Next Inspection,Expiration Date,Comments\n"
+        
+        // Datos de los items
+        for item in items {
+            let inspectionStatus = item.inspection == 1 ? "Passed" : (item.inspection == 0 ? "Failed" : "N/A")
+            
+            // Escapar comillas en los campos de texto para evitar problemas con el formato CSV
+            let description = item.itemDescription.replacingOccurrences(of: "\"", with: "\"\"")
+            let model = item.modelName.replacingOccurrences(of: "\"", with: "\"\"")
+            let brand = item.brand.replacingOccurrences(of: "\"", with: "\"\"")
+            let serialNumber = item.serialNumber.replacingOccurrences(of: "\"", with: "\"\"")
+            let condition = item.conditionO.replacingOccurrences(of: "\"", with: "\"\"")
+            let inspector = item.inspectorName.replacingOccurrences(of: "\"", with: "\"\"")
+            let comment = item.comment.replacingOccurrences(of: "\"", with: "\"\"")
+            
+            // Formato de fecha para mostrar
+            let inspectionDate = formatDateForCSV(item.inspectionDate)
+            let nextInspection = formatDateForCSV(item.inspectionDate1)
+            let expirationDate = formatDateForCSV(item.expirationDate)
+            
+            // Agregar fila del item
+            csvString += "\"\(item.id)\",\"\(description)\",\"\(model)\",\"\(brand)\",\"\(serialNumber)\",\"\(condition)\",\"\(inspectionStatus)\",\"\(inspectionDate)\",\"\(inspector)\",\"\(nextInspection)\",\"\(expirationDate)\",\"\(comment)\"\n"
+        }
+        
+        return csvString
+    }
+    
+    func formatDateForCSV(_ dateString: String) -> String {
+        // Convertir formato de fecha para mostrar en CSV
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
+        
+        if let date = dateFormatter.date(from: dateString) {
+            let outputFormatter = DateFormatter()
+            outputFormatter.dateFormat = "MM/dd/yyyy"
+            return outputFormatter.string(from: date)
+        }
+        
+        return dateString
+    }
+    
+    func saveCSVToTemporaryDirectory(content: String) -> URL? {
+        // Generar nombre de archivo con fecha
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyyMMdd_HHmmss"
+        let dateString = dateFormatter.string(from: Date())
+        
+        // Nombre del archivo: bag_name_date.csv (reemplazar espacios por guiones bajos)
+        let safeBagName = bag.name.replacingOccurrences(of: " ", with: "_")
+            .replacingOccurrences(of: "/", with: "-")
+        let fileName = "\(safeBagName)_\(dateString).csv"
+        
+        // Obtener directorio temporal
+        let tempDirectory = FileManager.default.temporaryDirectory
+        let fileURL = tempDirectory.appendingPathComponent(fileName)
+        
+        // Escribir el contenido en el archivo
+        do {
+            try content.write(to: fileURL, atomically: true, encoding: .utf8)
+            return fileURL
+        } catch {
+            print("Error al escribir el archivo CSV: \(error)")
+            return nil
+        }
+    }
+    
+    func shareCSV(fileURL: URL) {
+        // Crear un Activity View Controller para compartir el archivo
+        let activityViewController = UIActivityViewController(
+            activityItems: [fileURL],
+            applicationActivities: nil
+        )
+        
+        // Para mostrar la notificación de éxito cuando se cierre la vista de compartir
+        activityViewController.completionWithItemsHandler = { (activityType, completed, returnedItems, error) in
+            if completed {
+                self.showExportSuccess = true
+                self.showSuccessToast()
+            }
+        }
+        
+        // Para iPad, configurar el popover
+        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let rootViewController = windowScene.windows.first?.rootViewController {
+            
+            activityViewController.popoverPresentationController?.sourceView = rootViewController.view
+            
+            // Presentar el Activity View Controller
+            rootViewController.present(activityViewController, animated: true, completion: nil)
+        }
+    }
+    
+    func showSuccessToast() {
+        withAnimation(.bouncy) {
+            let toast = Toast { id in
+                SuccessToastView(id)
+            }
+            self.toasts.append(toast)
+            
+            // Eliminar el toast después de unos segundos
+            DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+                if let index = self.toasts.firstIndex(where: { $0.id == toast.id }) {
+                    withAnimation(.bouncy) {
+                        self.toasts.remove(at: index)
+                    }
+                }
+            }
+        }
+    }
+    
+    func showExportError() {
+        withAnimation(.bouncy) {
+            let toast = Toast { id in
+                ErrorToastView(id)
+            }
+            self.toasts.append(toast)
+            
+            // Eliminar el toast después de unos segundos
+            DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+                if let index = self.toasts.firstIndex(where: { $0.id == toast.id }) {
+                    withAnimation(.bouncy) {
+                        self.toasts.remove(at: index)
+                    }
+                }
+            }
+        }
+    }
+    
+    @ViewBuilder
+    func SuccessToastView(_ id: String) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: "checkmark.circle.fill")
+                .foregroundColor(.green)
+            
+            Text("Archivo CSV exportado exitosamente")
+                .font(.callout)
+            
+            Spacer(minLength: 0)
+            
+            Button {
+                $toasts.delete(id)
+            } label: {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.title2)
+            }
+        }
+        .foregroundStyle(Color.primary)
+        .padding(.vertical, 12)
+        .padding(.leading, 15)
+        .padding(.trailing, 10)
+        .background {
+            Capsule()
+                .fill(.background)
+                .shadow(color: .black.opacity(0.06), radius: 3, x: -1, y: -3)
+                .shadow(color: .black.opacity(0.06), radius: 2, x: 1, y: 3)
+        }
+        .padding(.horizontal, 15)
+    }
+    
+    @ViewBuilder
+    func ErrorToastView(_ id: String) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: "xmark.circle.fill")
+                .foregroundColor(.red)
+            
+            Text("Error al exportar el archivo CSV")
+                .font(.callout)
+            
+            Spacer(minLength: 0)
+            
+            Button {
+                $toasts.delete(id)
+            } label: {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.title2)
+            }
+        }
+        .foregroundStyle(Color.primary)
+        .padding(.vertical, 12)
+        .padding(.leading, 15)
+        .padding(.trailing, 10)
+        .background {
+            Capsule()
+                .fill(.background)
+                .shadow(color: .black.opacity(0.06), radius: 3, x: -1, y: -3)
+                .shadow(color: .black.opacity(0.06), radius: 2, x: 1, y: 3)
+        }
+        .padding(.horizontal, 15)
     }
 }
 
